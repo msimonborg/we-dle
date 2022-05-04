@@ -37,6 +37,12 @@ defmodule WeDle.Application do
     :ok
   end
 
+  @doc """
+  Returns the runtime environment as configured in `config/config.exs`
+  by `Config.config_env/0`.
+  """
+  def runtime_env, do: Application.get_env(:we_dle, :runtime_env)
+
   # libcluster clustering topologies
   defp topologies do
     Application.get_env(:libcluster, :topologies) || []
@@ -44,6 +50,6 @@ defmodule WeDle.Application do
 
   # only start Finch for mailers in production
   defp start_finch_in_prod() do
-    if Mix.env() == :prod, do: [{Finch, name: WeDle.Mailer.Finch}], else: []
+    if runtime_env() == :prod, do: [{Finch, name: WeDle.Mailer.Finch}], else: []
   end
 end

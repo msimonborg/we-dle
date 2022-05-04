@@ -8,7 +8,8 @@
 import Config
 
 config :we_dle,
-  ecto_repos: [WeDle.Repo]
+  ecto_repos: [WeDle.Repo],
+  runtime_env: config_env()
 
 # Configures the endpoint
 config :we_dle, WeDleWeb.Endpoint,

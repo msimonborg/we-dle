@@ -21,7 +21,7 @@ defmodule WeDle.MixProject do
   def application do
     [
       mod: {WeDle.Application, []},
-      extra_applications: [:logger, :runtime_tools]
+      extra_applications: [:logger, :os_mon, :runtime_tools]
     ]
   end
 
@@ -34,9 +34,11 @@ defmodule WeDle.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
+      {:bcrypt_elixir, "~> 2.0"},
       {:ecto_sql, "~> 3.6"},
       {:esbuild, "~> 0.4", runtime: Mix.env() == :dev},
       {:ex_doc, "~> 0.1", only: [:test, :dev]},
+      {:finch, "~> 0.12.0", only: :prod},
       {:floki, ">= 0.30.0", only: :test},
       {:gettext, "~> 0.18"},
       {:jason, "~> 1.2"},
@@ -49,6 +51,7 @@ defmodule WeDle.MixProject do
       {:phoenix_live_view, "~> 0.17.5"},
       {:plug_cowboy, "~> 2.5"},
       {:postgrex, ">= 0.0.0"},
+      {:swoosh, "~> 1.4"},
       {:tailwind, "~> 0.1", runtime: Mix.env() == :dev},
       {:telemetry_metrics, "~> 0.6"},
       {:telemetry_poller, "~> 1.0"}

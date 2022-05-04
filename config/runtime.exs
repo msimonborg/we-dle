@@ -63,6 +63,31 @@ if config_env() == :prod do
     ],
     secret_key_base: secret_key_base
 
+  ## Configuring the mailer
+
+  # In production you need to configure the mailer to use a different adapter.
+  # Also, you may need to configure the Swoosh API client of your choice if you
+  # are not using SMTP. Here is an example of the configuration:
+
+  config :we_dle, WeDle.Mailer,
+    adapter: Swoosh.Adapters.Sendgrid,
+    api_key:
+      System.get_env("WEDLE_SENDGRID_API_KEY") ||
+        raise("""
+        environment variable WEDLE_SENDGRID_API_KEY is missing.
+        Make sure to configure the API key in the current environment.
+        """)
+
+  # For this example you need include a HTTP client required by Swoosh API client.
+  # Swoosh supports Hackney and Finch out of the box:
+
+  config :swoosh,
+    api_client: Swoosh.ApiClient.Finch,
+    finch_name: WeDle.Mailer.Finch
+
+  #
+  # See https://hexdocs.pm/swoosh/Swoosh.html#module-installation for details.
+
   app_name =
     System.get_env("FLY_APP_NAME") ||
       raise "FLY_APP_NAME not available"

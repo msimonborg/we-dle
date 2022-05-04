@@ -7,20 +7,21 @@ defmodule WeDle.Application do
 
   @impl true
   def start(_type, _args) do
-    children = [
-      # setup for clustering
-      {Cluster.Supervisor, [topologies(), [name: MyApp.ClusterSupervisor]]},
-      # Start the Ecto repository
-      WeDle.Repo,
-      # Start the Telemetry supervisor
-      WeDleWeb.Telemetry,
-      # Start the PubSub system
-      {Phoenix.PubSub, name: WeDle.PubSub},
-      # Start the Endpoint (http/https)
-      WeDleWeb.Endpoint
-      # Start a worker by calling: WeDle.Worker.start_link(arg)
-      # {WeDle.Worker, arg}
-    ]
+    children =
+      [
+        # setup for clustering
+        {Cluster.Supervisor, [topologies(), [name: WeDle.ClusterSupervisor]]},
+        # Start the Ecto repository
+        WeDle.Repo,
+        # Start the Telemetry supervisor
+        WeDleWeb.Telemetry,
+        # Start the PubSub system
+        {Phoenix.PubSub, name: WeDle.PubSub},
+        # Start the Endpoint (http/https)
+        WeDleWeb.Endpoint
+        # Start a worker by calling: WeDle.Worker.start_link(arg)
+        # {WeDle.Worker, arg}
+      ] ++ start_finch_in_prod()
 
     # See https://hexdocs.pm/elixir/Supervisor.html
     # for other strategies and supported options
@@ -39,5 +40,10 @@ defmodule WeDle.Application do
   # libcluster clustering topologies
   defp topologies do
     Application.get_env(:libcluster, :topologies) || []
+  end
+
+  # only start Finch for mailers in production
+  defp start_finch_in_prod() do
+    if Mix.env() == :prod, do: [{Finch, name: WeDle.Mailer.Finch}], else: []
   end
 end

@@ -35,6 +35,7 @@ defmodule WeDle.MixProject do
   defp deps do
     [
       {:bcrypt_elixir, "~> 2.0"},
+      {:credo, "~> 1.6", only: [:dev, :test], runtime: false},
       {:ecto_sql, "~> 3.6"},
       {:esbuild, "~> 0.4", runtime: Mix.env() == :dev},
       {:ex_doc, "~> 0.1", only: [:test, :dev]},
@@ -71,7 +72,7 @@ defmodule WeDle.MixProject do
       "ecto.reset": ["ecto.drop", "ecto.setup"],
       test: ["ecto.create --quiet", "ecto.migrate --quiet", "test"],
       "assets.deploy": ["tailwind default --minify", "esbuild default --minify", "phx.digest"],
-      we_dle: ["test", "format", "docs"]
+      we_dle: ["test", "credo --strict", "format", "docs"]
     ]
   end
 end

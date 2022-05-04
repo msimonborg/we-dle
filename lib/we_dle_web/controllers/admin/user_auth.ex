@@ -1,4 +1,8 @@
 defmodule WeDleWeb.Admin.UserAuth do
+  @moduledoc """
+  Functions to work with user authentication and session management.
+  """
+
   import Plug.Conn
   import Phoenix.Controller
 

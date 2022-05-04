@@ -1,4 +1,8 @@
 defmodule WeDle.Accounts.UserNotifier do
+  @moduledoc """
+  This module exposes notification email templating and delivery.
+  """
+
   import Swoosh.Email
 
   alias WeDle.Mailer

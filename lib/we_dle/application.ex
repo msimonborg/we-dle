@@ -49,7 +49,7 @@ defmodule WeDle.Application do
   end
 
   # only start Finch for mailers in production
-  defp start_finch_in_prod() do
+  defp start_finch_in_prod do
     if runtime_env() == :prod, do: [{Finch, name: WeDle.Mailer.Finch}], else: []
   end
 end

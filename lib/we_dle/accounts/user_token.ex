@@ -1,4 +1,8 @@
 defmodule WeDle.Accounts.UserToken do
+  @moduledoc """
+  The user token is used to authenticate a user on each page request.
+  """
+
   use Ecto.Schema
   import Ecto.Query
   alias WeDle.Accounts.UserToken

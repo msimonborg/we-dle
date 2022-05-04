@@ -36,7 +36,9 @@ defmodule WeDle.DataCase do
   Sets up the sandbox based on the test tags.
   """
   def setup_sandbox(tags) do
+    # credo:disable-for-next-line
     pid = Ecto.Adapters.SQL.Sandbox.start_owner!(WeDle.Repo, shared: not tags[:async])
+    # credo:disable-for-next-line
     on_exit(fn -> Ecto.Adapters.SQL.Sandbox.stop_owner(pid) end)
   end
 

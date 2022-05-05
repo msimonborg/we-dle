@@ -11,6 +11,12 @@ defmodule WeDle.Application do
       [
         # setup for clustering
         {Cluster.Supervisor, [topologies(), [name: WeDle.ClusterSupervisor]]},
+        # Start distributed registry
+        WeDle.DistributedRegistry,
+        # Start distributed supervisor
+        WeDle.DistributedSupervisor,
+        # Start the node listener
+        WeDle.NodeListener,
         # Start the Ecto repository
         WeDle.Repo,
         # Start the Telemetry supervisor

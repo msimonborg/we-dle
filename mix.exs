@@ -42,6 +42,7 @@ defmodule WeDle.MixProject do
       {:finch, "~> 0.12.0", only: :prod},
       {:floki, ">= 0.30.0", only: :test},
       {:gettext, "~> 0.18"},
+      {:horde, "~> 0.8.7"},
       {:jason, "~> 1.2"},
       {:libcluster, "~> 3.3"},
       {:phoenix, "~> 1.6.7"},

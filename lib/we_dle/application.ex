@@ -9,28 +9,14 @@ defmodule WeDle.Application do
   def start(_type, _args) do
     children =
       [
-        # setup for clustering
         {Cluster.Supervisor, [topologies(), [name: WeDle.ClusterSupervisor]]},
-        # Start distributed registry
-        WeDle.DistributedRegistry,
-        # Start distributed supervisor
-        WeDle.DistributedSupervisor,
-        # Start the node listener
-        WeDle.NodeListener,
-        # Start the Ecto repository
+        WeDle.Game.Supervisor,
         WeDle.Repo,
-        # Start the Telemetry supervisor
         WeDleWeb.Telemetry,
-        # Start the PubSub system
         {Phoenix.PubSub, name: WeDle.PubSub},
-        # Start the Endpoint (http/https)
         WeDleWeb.Endpoint
-        # Start a worker by calling: WeDle.Worker.start_link(arg)
-        # {WeDle.Worker, arg}
       ] ++ start_finch_in_prod()
 
-    # See https://hexdocs.pm/elixir/Supervisor.html
-    # for other strategies and supported options
     opts = [strategy: :one_for_one, name: WeDle.Supervisor]
     Supervisor.start_link(children, opts)
   end

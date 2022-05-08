@@ -1,4 +1,7 @@
 defmodule WeDle.GameTest do
   use ExUnit.Case, async: true
-  doctest WeDle.Game
+
+  import ExUnit.CaptureIO
+
+  capture_io(fn -> doctest WeDle.Game end)
 end

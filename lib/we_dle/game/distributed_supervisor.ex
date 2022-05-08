@@ -1,4 +1,4 @@
-defmodule WeDle.DistributedSupervisor do
+defmodule WeDle.Game.DistributedSupervisor do
   @moduledoc """
   Uses `Horde.Supervisor` to dynamically start and supervise long running
   processes evenly distributed across the cluster.

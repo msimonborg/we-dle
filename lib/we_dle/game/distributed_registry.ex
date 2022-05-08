@@ -1,4 +1,4 @@
-defmodule WeDle.DistributedRegistry do
+defmodule WeDle.Game.DistributedRegistry do
   @moduledoc """
   Uses `Horde.Registry` to globally register long running processes
   across the cluster with replicated storage backed by CRDTs.
@@ -9,8 +9,7 @@ defmodule WeDle.DistributedRegistry do
 
   use Horde.Registry
 
-  @type name :: binary | [name_part]
-  @type name_part :: {:game_id, binary} | {:player_id, binary}
+  @type name :: binary
 
   # -- Client API --
 
@@ -20,7 +19,12 @@ defmodule WeDle.DistributedRegistry do
 
   @doc """
   Returns a `:via` naming tuple for registration and lookup in the
-  `WeDle.DistributedRegistry`.
+  `WeDle.Game.DistributedRegistry`.
+
+  ## Example
+
+      iex> WeDle.Game.DistributedRegistry.via_tuple("hello")
+      {:via, Horde.Registry, {WeDle.Game.DistributedRegistry, "hello"}}
   """
   @spec via_tuple(name) :: {:via, Horde.Registry, {__MODULE__, name}}
   def via_tuple(name) when is_binary(name) or is_list(name),

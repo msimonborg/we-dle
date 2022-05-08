@@ -3,7 +3,7 @@
 app = "we-dle"
 
 kill_signal = "SIGTERM"
-kill_timeout = 10 # more time for process handoffs
+kill_timeout = 10
 processes = []
 
 [deploy]

@@ -1,4 +1,4 @@
-defmodule WeDle.NodeListener do
+defmodule WeDle.Game.NodeListener do
   @moduledoc """
   Listens for `{:nodeup, node}` and `{:nodedown, node}` events and
   adjusts the members of the Horde clusters accordingly.
@@ -9,7 +9,7 @@ defmodule WeDle.NodeListener do
 
   use GenServer
 
-  alias WeDle.{DistributedRegistry, DistributedSupervisor}
+  alias WeDle.Game.{DistributedRegistry, DistributedSupervisor}
 
   # -- Client API --
 

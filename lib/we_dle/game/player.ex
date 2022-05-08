@@ -7,12 +7,13 @@ defmodule WeDle.Game.Player do
 
   alias WeDle.Game.{Board, PlayerError}
 
-  defstruct [:id, :challenge, :board]
+  defstruct [:id, :game_id, :challenge, :board]
 
   @type option :: {:id | :challenge | :board, String.t() | Board.t()}
   @type options :: [option]
   @type t :: %__MODULE__{
           id: String.t(),
+          game_id: String.t(),
           challenge: String.t() | nil,
           board: Board.t()
         }
@@ -22,7 +23,7 @@ defmodule WeDle.Game.Player do
   """
   @spec new(options) :: t
   def new(opts) when is_list(opts) do
-    validate_opts!(opts, :new, [:id, :board])
+    validate_opts!(opts, :new, [:id, :game_id, :board])
     struct!(__MODULE__, opts)
   end
 

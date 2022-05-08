@@ -64,7 +64,7 @@ defmodule WeDle.Game.Server do
       {:reply, {:error, :player_already_joined}, game}
     else
       board = Board.new(game.word_length)
-      player = Player.new(id: player_id, board: board)
+      player = Player.new(id: player_id, game_id: game.id, board: board)
       {:reply, {:ok, player}, add_player(game, player)}
     end
   end

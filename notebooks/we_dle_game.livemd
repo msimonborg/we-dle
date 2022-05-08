@@ -1,0 +1,59 @@
+# WeDle.Game
+
+## start_or_join/3
+
+To start a new game, it is recommended that you call `start_or_join/3` to start the game if it doesn't already exist, and join it automatically. A successful return value is `{:ok, player}`, where `player` is a `WeDle.Game.Player` struct representing the player that just joined.
+
+```elixir
+alias WeDle.Game
+Game.start_or_join("game", "p1", word_length: 6)
+```
+
+If you attempt to join the game again with the same player you will get an error.
+
+```elixir
+Game.start_or_join("game", "p1", word_length: 6)
+```
+
+A second player can also join the game by calling `start_or_join/3`.
+
+```elixir
+Game.start_or_join("game", "p2")
+```
+
+Now with two players the game is full, and any subsequent attempts to join will return an error.
+
+```elixir
+Game.start_or_join("game", "p3")
+```
+
+You can also call `start/2` and `join/2` separately if you need to, but you will have to remember to join the game after you start it.
+
+```elixir
+{:ok, pid} = Game.start("new_game", word_length: 4)
+Game.join("new_game", "p4")
+```
+
+## set_challenge/3
+
+To set a player's challenge word for the other player, call `set_challenge/3`.
+
+```elixir
+Game.set_challenge("game", "p1", "whisky")
+```
+
+The player must have already joined the game, or else the function will return an error.
+
+```elixir
+Game.set_challenge("game", "p5", "whisky")
+```
+
+The function will also return an error if a challenge word is already set for the player.
+
+```elixir
+Game.set_challenge("game", "p1", "scotch")
+```
+
+```elixir
+Game.submit_word("game", "p2", "scotch")
+```

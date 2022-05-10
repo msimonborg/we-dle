@@ -80,7 +80,7 @@ defmodule WeDle.Game.Board do
   end
 
   defp insert(comparison, board) do
-    Enum.reduce_while(0..(board.word_length - 1), board, fn i, brd ->
+    Enum.reduce_while(0..5, board, fn i, brd ->
       if Enum.at(brd.rows, i) == [] do
         rows = List.replace_at(brd.rows, i, comparison)
         {:halt, %{brd | rows: rows}}

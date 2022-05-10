@@ -35,6 +35,7 @@ defmodule WeDle.MixProject do
   defp deps do
     [
       {:bcrypt_elixir, "~> 2.0"},
+      {:benchee, "~> 1.1", only: :dev},
       {:credo, "~> 1.6", only: [:dev, :test], runtime: false},
       {:ecto_sql, "~> 3.6"},
       {:esbuild, "~> 0.4", runtime: Mix.env() == :dev},

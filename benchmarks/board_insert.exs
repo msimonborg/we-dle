@@ -10,14 +10,15 @@ defmodule NewBoard do
     struct!(__MODULE__, word_length: word_length)
   end
 
-  def insert(%__MODULE__{} = board, guess, target)
-      when is_binary(guess) and is_binary(target) do
-    guess_graphs = String.graphemes(guess)
-    with :ok <- validate_word_length(guess_graphs, board.word_length),
+  def insert(%__MODULE__{} = board, word, target)
+      when is_binary(word) and is_binary(target) do
+    graphs = String.graphemes(word)
+
+    with :ok <- validate_word_length(graphs, board.word_length),
          :ok <- validate_board_is_not_full(board) do
       target_graphs = String.graphemes(target)
 
-      guess_graphs
+      graphs
       |> compare(target_graphs)
       |> insert(board)
     end
@@ -31,7 +32,7 @@ defmodule NewBoard do
     }
   end
 
-  defp validate_word_length(guess_graphs, word_length) when length(guess_graphs) == word_length,
+  defp validate_word_length(graphs, word_length) when length(graphs) == word_length,
     do: :ok
 
   defp validate_word_length(_, _), do: {:error, :invalid_word_length}
@@ -39,28 +40,24 @@ defmodule NewBoard do
   defp validate_board_is_not_full(%{turns: turns}) when turns < 6, do: :ok
   defp validate_board_is_not_full(%{turns: _turns}), do: {:error, :board_full}
 
-  defp compare(guess_graphs, target_graphs) do
-    case guess_graphs == target_graphs do
-      true ->
-        Enum.map(guess_graphs, &{0, &1})
+  defp compare(graphs, target_graphs) when graphs == target_graphs,
+    do: Enum.map(graphs, &{0, &1})
 
-      false ->
-        compare_letters(guess_graphs, target_graphs)
-    end
-  end
+  defp compare(graphs, target_graphs),
+    do: compare_letters(graphs, target_graphs)
 
-  defp compare_letters(guess_graphs, target_graphs) do
-    max_index = length(guess_graphs) - 1
+  defp compare_letters(graphs, target_graphs) do
+    max_index = length(graphs) - 1
 
-    guess_graphs
+    graphs
     |> compare_exact_matches(target_graphs, max_index)
     |> compare_possible_matches(target_graphs, max_index)
     |> Map.get(:comps)
   end
 
-  defp compare_exact_matches(guess_graphs, target_graphs, max_index) do
+  defp compare_exact_matches(graphs, target_graphs, max_index) do
     Enum.reduce(0..max_index, %{distro: %{}, comps: []}, fn i, acc ->
-      graph = Enum.at(guess_graphs, i)
+      graph = Enum.at(graphs, i)
       target_graph = Enum.at(target_graphs, i)
 
       if graph == target_graph do
@@ -108,11 +105,11 @@ defmodule OldBoard do
     struct!(__MODULE__, word_length: word_length)
   end
 
-  def insert(%__MODULE__{} = board, guess, target)
-      when is_binary(guess) and is_binary(target) do
-    with :ok <- validate_word_length(guess, board.word_length),
+  def insert(%__MODULE__{} = board, word, target)
+      when is_binary(word) and is_binary(target) do
+    with :ok <- validate_word_length(word, board.word_length),
          :ok <- validate_board_is_not_full(board) do
-      guess
+      word
       |> compare(target)
       |> insert(board)
     end
@@ -129,8 +126,8 @@ defmodule OldBoard do
     end)
   end
 
-  defp validate_word_length(guess, word_length) do
-    case length(to_charlist(guess)) == word_length do
+  defp validate_word_length(word, word_length) do
+    case length(to_charlist(word)) == word_length do
       true -> :ok
       false -> {:error, :invalid_word_length}
     end
@@ -146,32 +143,32 @@ defmodule OldBoard do
     end
   end
 
-  defp compare(guess, target) do
-    case guess == target do
+  defp compare(word, target) do
+    case word == target do
       true ->
-        guess
+        word
         |> to_charlist()
         |> Enum.map(&{0, to_string([&1])})
 
       false ->
-        compare_letters(guess, target)
+        compare_letters(word, target)
     end
   end
 
-  defp compare_letters(guess, target) do
+  defp compare_letters(word, target) do
     target_chars = to_charlist(target)
-    guess_chars = to_charlist(guess)
-    max_index = length(guess_chars) - 1
+    word_chars = to_charlist(word)
+    max_index = length(word_chars) - 1
 
-    guess_chars
+    word_chars
     |> compare_exact_matches(target_chars, max_index)
     |> compare_possible_matches(target_chars, max_index)
     |> Map.get(:comps)
   end
 
-  defp compare_exact_matches(guess_chars, target_chars, max_index) do
+  defp compare_exact_matches(word_chars, target_chars, max_index) do
     Enum.reduce(0..max_index, %{distro: %{}, comps: []}, fn i, acc ->
-      char = Enum.at(guess_chars, i)
+      char = Enum.at(word_chars, i)
       target_char = Enum.at(target_chars, i)
 
       if char == target_char do
@@ -278,12 +275,12 @@ Benchee.run(
 # Opened report using open
 
 # Name                ips        average  deviation         median         99th %
-# new_board       66.98 K       14.93 μs    ±93.15%       13.66 μs       42.36 μs
-# old_board       52.45 K       19.07 μs   ±153.40%       14.75 μs       75.75 μs
+# new_board       64.89 K       15.41 μs    ±88.70%       14.04 μs       39.96 μs
+# old_board       44.77 K       22.34 μs   ±319.87%       15.48 μs      152.18 μs
 
 # Comparison:
-# new_board       66.98 K
-# old_board       52.45 K - 1.28x slower +4.14 μs
+# new_board       64.89 K
+# old_board       44.77 K - 1.45x slower +6.93 μs
 
 # Memory usage statistics:
 

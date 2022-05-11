@@ -10,12 +10,13 @@ defmodule WeDle.Game.Board do
     turns: 0
   ]
 
-  @type row_entry :: {non_neg_integer, String.t()}
+  @type row_entry :: {0 | 1 | 2, String.t()}
   @type row :: [row_entry]
+  @type turn :: 0 | 1 | 2 | 3 | 4 | 5 | 6
   @type t :: %__MODULE__{
-          word_length: pos_integer,
+          word_length: 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10,
           rows: [row],
-          turns: 0 | 1 | 2 | 3 | 4 | 5 | 6
+          turns: turn
         }
 
   @doc """
@@ -35,7 +36,7 @@ defmodule WeDle.Game.Board do
   end
 
   @doc """
-  Inserts a comparison between the `guess` and the `target`
+  Inserts a comparison between the `word` and the `target`
   into the board and computes the results.
 
   Results are inserted into the next empty row. Each individual
@@ -73,15 +74,15 @@ defmodule WeDle.Game.Board do
         turns: 1
       }
   """
-  def insert(%__MODULE__{} = board, guess, target)
-      when is_binary(guess) and is_binary(target) do
-    guess_graphs = String.graphemes(guess)
+  def insert(%__MODULE__{} = board, word, target)
+      when is_binary(word) and is_binary(target) do
+    graphs = String.graphemes(word)
 
-    with :ok <- validate_word_length(guess_graphs, board.word_length),
+    with :ok <- validate_word_length(graphs, board.word_length),
          :ok <- validate_board_is_not_full(board) do
       target_graphs = String.graphemes(target)
 
-      guess_graphs
+      graphs
       |> compare(target_graphs)
       |> insert(board)
     end
@@ -95,7 +96,7 @@ defmodule WeDle.Game.Board do
     }
   end
 
-  defp validate_word_length(guess_graphs, word_length) when length(guess_graphs) == word_length,
+  defp validate_word_length(graphs, word_length) when length(graphs) == word_length,
     do: :ok
 
   defp validate_word_length(_, _), do: {:error, :invalid_word_length}
@@ -103,28 +104,24 @@ defmodule WeDle.Game.Board do
   defp validate_board_is_not_full(%{turns: turns}) when turns < 6, do: :ok
   defp validate_board_is_not_full(%{turns: _turns}), do: {:error, :board_full}
 
-  defp compare(guess_graphs, target_graphs) do
-    case guess_graphs == target_graphs do
-      true ->
-        Enum.map(guess_graphs, &{0, &1})
+  defp compare(graphs, target_graphs) when graphs == target_graphs,
+    do: Enum.map(graphs, &{0, &1})
 
-      false ->
-        compare_letters(guess_graphs, target_graphs)
-    end
-  end
+  defp compare(graphs, target_graphs),
+    do: compare_letters(graphs, target_graphs)
 
-  defp compare_letters(guess_graphs, target_graphs) do
-    max_index = length(guess_graphs) - 1
+  defp compare_letters(graphs, target_graphs) do
+    max_index = length(graphs) - 1
 
-    guess_graphs
+    graphs
     |> compare_exact_matches(target_graphs, max_index)
     |> compare_possible_matches(target_graphs, max_index)
     |> Map.get(:comps)
   end
 
-  defp compare_exact_matches(guess_graphs, target_graphs, max_index) do
+  defp compare_exact_matches(graphs, target_graphs, max_index) do
     Enum.reduce(0..max_index, %{distro: %{}, comps: []}, fn i, acc ->
-      graph = Enum.at(guess_graphs, i)
+      graph = Enum.at(graphs, i)
       target_graph = Enum.at(target_graphs, i)
 
       if graph == target_graph do

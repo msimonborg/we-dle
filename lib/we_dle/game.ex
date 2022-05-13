@@ -8,20 +8,24 @@ defmodule WeDle.Game do
   alias WeDle.Game.{
     DistributedRegistry,
     DistributedSupervisor,
+    EdgeServer,
+    EdgeSupervisor,
     Player,
     Server
   }
 
-  defstruct [:id, :word_length, :winner, players: %{}]
+  defstruct [:id, :word_length, :winner, players: %{}, edge_servers: %{}]
 
   @type id :: String.t()
   @type option :: {:word_length, pos_integer}
   @type options :: [option]
+  @type player :: Player.t()
   @type t :: %__MODULE__{
           id: id,
           word_length: pos_integer,
-          players: %{integer => Player.t()},
-          winner: Player.t() | nil
+          players: %{id => player},
+          edge_servers: %{id => %{ref: reference, pid: pid}},
+          winner: player | nil
         }
 
   @doc """
@@ -63,14 +67,14 @@ defmodule WeDle.Game do
 
       iex> WeDle.Game.start("diva_game")
       iex> {:ok, %WeDle.Game.Player{id: "Madonna"}} = WeDle.Game.join("diva_game", "Madonna")
-      iex> {:error, :player_already_joined} = WeDle.Game.join("diva_game", "Madonna")
       iex> {:ok, %WeDle.Game.Player{id: "Tina"}} = WeDle.Game.join("diva_game", "Tina")
       iex> WeDle.Game.join("diva_game", "Sade")
-      {:error, :game_full}
+      {:error, :player_not_found}
   """
-  @spec join(id, id) :: {:ok, Player.t()} | {:error, term}
+  @spec join(id, id) :: {:ok, player} | {:error, term}
   def join(game_id, player_id) do
-    GenServer.call(qualified_name(game_id), {:join_game, player_id})
+    EdgeSupervisor.start_edge(game_id, player_id)
+    EdgeServer.join_game(game_id, player_id)
   end
 
   @doc """
@@ -84,12 +88,11 @@ defmodule WeDle.Game do
   ## Examples
 
       iex> {:ok, %WeDle.Game.Player{id: "Nomar"}} = WeDle.Game.start_or_join("baseball_game", "Nomar")
-      iex> {:error, :player_already_joined} = WeDle.Game.start_or_join("baseball_game", "Nomar")
       iex> {:ok, %WeDle.Game.Player{id: "Pedro"}} = WeDle.Game.start_or_join("baseball_game", "Pedro")
       iex> WeDle.Game.start_or_join("baseball_game", "Manny")
-      {:error, :game_full}
+      {:error, :player_not_found}
   """
-  @spec start_or_join(id, id, options) :: {:ok, Player.t()} | {:error, term}
+  @spec start_or_join(id, id, options) :: {:ok, player} | {:error, term}
   def start_or_join(game_id, player_id, opts \\ []) do
     case start(game_id, opts) do
       {:ok, _pid} -> join(game_id, player_id)
@@ -103,19 +106,18 @@ defmodule WeDle.Game do
 
   Returns `{:ok, player}` on success with the updates inserted into `player`.
 
-  Returns `{:error, reason}` if the player did not join the game prior to
-  calling this function or if the player's challenge word has previously been set.
+  Returns `{:error, reason}` if the player's challenge word has previously
+  been set.
 
   ## Examples
 
       iex> WeDle.Game.start_or_join("movie_game", "p1")
       iex> {:ok, %WeDle.Game.Player{challenge: "Rocky"}} = WeDle.Game.set_challenge("movie_game", "p1", "Rocky")
-      iex> {:error, :player_not_found} = WeDle.Game.set_challenge("movie_game", "p5", "Forrest")
       iex> WeDle.Game.set_challenge("movie_game", "p1", "Titanic")
       {:error, :challenge_already_exists}
   """
   def set_challenge(game_id, player_id, word) when is_binary(word) and is_binary(player_id) do
-    GenServer.call(qualified_name(game_id), {:set_challenge, word, player_id})
+    GenServer.call(edge_name(game_id, player_id), {:set_challenge, word})
   end
 
   @doc """
@@ -135,12 +137,21 @@ defmodule WeDle.Game do
       [[{1, "s"}, {2, "c"}, {2, "o"}, {2, "t"}, {2, "c"}, {1, "h"}], [], [], [], [], []]
       iex> WeDle.Game.submit_word("spirits_game", "p2", "gin")
       {:error, :invalid_word_length}
-      iex> WeDle.Game.submit_word("spirits_game", "p3", "mezcal")
-      {:error, :player_not_found}
   """
   def submit_word(game_id, player_id, word) when is_binary(word) and is_binary(player_id) do
-    GenServer.call(qualified_name(game_id), {:submit_word, word, player_id})
+    GenServer.call(edge_name(game_id, player_id), {:submit_word, word})
   end
 
-  defp qualified_name(game_id) when is_binary(game_id), do: DistributedRegistry.via_tuple(game_id)
+  @doc """
+  Returns the `pid` of the game with the given `game_id`.
+  """
+  def whereis(game_id) do
+    case Horde.Registry.lookup(DistributedRegistry, game_id) do
+      [{pid, _}] when is_pid(pid) -> pid
+      _ -> nil
+    end
+  end
+
+  # defp game_name(game_id) when is_binary(game_id), do: DistributedRegistry.via_tuple(game_id)
+  defp edge_name(game_id, player_id), do: EdgeServer.name(game_id, player_id)
 end

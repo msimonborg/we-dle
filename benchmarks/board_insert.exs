@@ -61,14 +61,15 @@ defmodule NewBoard do
       target_graph = Enum.at(target_graphs, i)
 
       if graph == target_graph do
-        comps = List.insert_at(acc.comps, -1, {0, graph})
+        comps = [{0, graph} | acc.comps]
         distro = Map.update(acc.distro, graph, 1, &(&1 + 1))
         %{acc | distro: distro, comps: comps}
       else
-        comps = List.insert_at(acc.comps, -1, {:cont, graph})
+        comps = [{:cont, graph} | acc.comps]
         %{acc | comps: comps}
       end
     end)
+    |> Map.update!(:comps, &Enum.reverse/1)
   end
 
   defp compare_possible_matches(first_pass, target_graphs, max_index) do

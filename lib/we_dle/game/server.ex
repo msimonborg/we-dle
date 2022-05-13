@@ -8,7 +8,7 @@ defmodule WeDle.Game.Server do
 
   require Logger
 
-  alias WeDle.{Game, GameError}
+  alias WeDle.Game
   alias Game.{Board, DistributedRegistry, Player}
 
   @type on_start :: {:ok, pid} | :ignore | {:error, {ArgumentError, stacktrace :: list}}
@@ -43,88 +43,81 @@ defmodule WeDle.Game.Server do
 
   @impl true
   def init(opts) do
-    {:ok, build_state(opts)}
-  end
-
-  defp build_state(opts) do
     game_id = Keyword.fetch!(opts, :game_id)
     word_length = Keyword.fetch!(opts, :word_length)
-    struct!(Game, id: game_id, word_length: word_length)
+
+    {:ok, struct!(Game, id: game_id, word_length: word_length)}
   end
 
   @impl true
-  def handle_call({:join_game, player_id}, _, %{players: players} = game)
+  def handle_call({:join_game, player_id}, {pid, _}, %{players: players} = game)
+      when map_size(players) == 2 do
+    with {:ok, player} <- get_player(game, player_id),
+         {:ok, opponent} <- get_opponent(game, player_id) do
+      do_join_game(game, player_id, player, opponent, pid)
+    else
+      {:error, _} = error -> {:reply, error, game}
+    end
+  end
+
+  def handle_call({:join_game, player_id}, {pid, _}, %{players: players} = game)
       when map_size(players) < 2 do
-    if Enum.any?(players, fn {_, p} -> p.id == player_id end) do
-      Logger.warn("""
-      player(id: #{player_id}) tried to join game(id: #{game.id}), but player
-      has already joined
-      """)
+    player =
+      Map.get_lazy(players, player_id, fn ->
+        board = Board.new(game.word_length)
+        Player.new(id: player_id, game_id: game.id, board: board)
+      end)
 
-      {:reply, {:error, :player_already_joined}, game}
-    else
-      board = Board.new(game.word_length)
-      player = Player.new(id: player_id, game_id: game.id, board: board)
-      {:reply, {:ok, player}, add_player(game, player)}
-    end
+    opponent = send_update_to_opponent(game, player)
+    do_join_game(game, player_id, player, opponent, pid)
   end
 
-  def handle_call({:join_game, player_id}, _, %{players: players} = game)
-      when map_size(players) >= 2 do
-    Logger.warn("""
-    player(id: #{player_id}) tried to join game(id: #{game.id}), but game is full
-    """)
-
-    {:reply, {:error, :game_full}, game}
+  @impl true
+  def handle_info({:update_player, player}, %{players: players} = game) do
+    send_update_to_opponent(game, player)
+    {:noreply, %{game | players: Map.put(players, player.id, player)}}
   end
 
-  def handle_call({:set_challenge, word, player_id}, _, %{players: players} = game) do
-    with {:ok, {index, player}} <- get_player(game, player_id),
-         :ok <- ensure_challenge_not_set(player, word) do
-      player = Map.put(player, :challenge, word)
-      {:reply, {:ok, player}, %{game | players: Map.put(players, index, player)}}
-    else
-      {:error, _} = error -> {:reply, error, game}
-    end
+  def handle_info({:DOWN, ref, _, _, _}, %{edge_servers: edge_servers} = game) do
+    Process.demonitor(ref, [:flush])
+    {player_id, _} = Enum.find(edge_servers, fn {_, edge} -> edge.ref == ref end)
+    {:noreply, %{game | edge_servers: Map.delete(edge_servers, player_id)}}
   end
 
-  def handle_call({:submit_word, word, player_id}, _, %{winner: nil, players: players} = game) do
-    with {:ok, {index, player}} <- get_player(game, player_id),
-         {:ok, {_, opponent}} <- get_opponent(game, player_id),
-         :ok <- ensure_challenge_is_set(opponent),
-         %Board{} = board <- Board.insert(player.board, word, opponent.challenge) do
-      player = %{player | board: board}
-      players = %{players | index => player}
-      {:reply, {:ok, player}, %{game | players: players}}
-    else
-      {:error, _} = error -> {:reply, error, game}
-    end
+  # -- Private Helpers --
+
+  defp do_join_game(game, player_id, player, opponent, pid) do
+    if edge = Map.get(game.edge_servers, player_id), do: Process.demonitor(edge.ref, [:flush])
+    ref = Process.monitor(pid)
+    edge_servers = Map.put_new(game.edge_servers, player_id, %{ref: ref, pid: pid})
+    players = Map.put_new(game.players, player_id, player)
+    game = %{game | edge_servers: edge_servers, players: players}
+    reply = %{player: player, opponent: opponent}
+    {:reply, {:ok, reply}, game}
   end
 
-  defp add_player(%{players: players} = game, player) do
-    index = map_size(players) + 1
+  defp send_update_to_opponent(game, player) do
+    opponent =
+      case get_opponent(game, player.id) do
+        {:ok, opponent} -> opponent
+        {:error, _} -> nil
+      end
 
-    if Map.has_key?(players, index) do
-      message = """
-      did not expect to already have a player at index #{index} in game:
-
-          #{inspect(game)}
-      """
-
-      Logger.error(message)
-      raise GameError, message
+    if opponent do
+      pid = game.edge_servers[opponent.id].pid
+      send(pid, {:update_opponent, player})
     end
 
-    %{game | players: Map.put(players, index, player)}
+    opponent
   end
 
   defp get_player(%{players: players} = game, player_id) do
-    result = Enum.find(players, fn {_, p} -> p.id == player_id end)
+    result = Map.get(players, player_id)
 
     if result do
       {:ok, result}
     else
-      Logger.warn("""
+      Logger.debug("""
       cannot find player with id #{player_id} in game:
 
           #{inspect(game)}
@@ -135,47 +128,19 @@ defmodule WeDle.Game.Server do
   end
 
   defp get_opponent(%{players: players} = game, player_id) do
-    result = Enum.find(players, fn {_, p} -> p.id != player_id end)
+    result = Enum.find(players, fn {id, _} -> id != player_id end)
 
     if result do
-      {:ok, result}
+      {_, opponent} = result
+      {:ok, opponent}
     else
-      Logger.warn("""
+      Logger.debug("""
       cannot find opponent of player with id #{player_id} in game:
 
           #{inspect(game)}
       """)
 
       {:error, :opponent_not_found}
-    end
-  end
-
-  defp ensure_challenge_not_set(player, word) do
-    if player.challenge do
-      Logger.warn("""
-      attempted to set challenge `"#{word}"`, but a challenge already exists for player:
-
-          #{inspect(player)}
-      """)
-
-      {:error, :challenge_already_exists}
-    else
-      :ok
-    end
-  end
-
-  defp ensure_challenge_is_set(player) do
-    if player.challenge do
-      :ok
-    else
-      Logger.warn("""
-      attempted to access challenge from player(id: #{player.id}), but a
-      challenge is not set for player:
-
-          #{inspect(player)}
-      """)
-
-      {:error, :challenge_not_found}
     end
   end
 end

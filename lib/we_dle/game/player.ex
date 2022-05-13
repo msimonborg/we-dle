@@ -9,7 +9,7 @@ defmodule WeDle.Game.Player do
 
   defstruct [:id, :game_id, :challenge, :board]
 
-  @type option :: {:id | :challenge | :board, String.t() | Board.t()}
+  @type option :: {:id | :game_id, String.t()} | {:board, Board.t()}
   @type options :: [option]
   @type t :: %__MODULE__{
           id: String.t(),

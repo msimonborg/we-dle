@@ -13,8 +13,9 @@ defmodule WeDle.Game.Board do
   @type row_entry :: {0 | 1 | 2, String.t()}
   @type row :: [row_entry]
   @type turn :: 0 | 1 | 2 | 3 | 4 | 5 | 6
+  @type word_length :: 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10
   @type t :: %__MODULE__{
-          word_length: 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10,
+          word_length: word_length,
           rows: [row],
           turns: turn
         }
@@ -29,7 +30,7 @@ defmodule WeDle.Game.Board do
         iex> WeDle.Game.Board.new(8)
         %WeDle.Game.Board{rows: [[], [], [], [], [], []], word_length: 8}
   """
-  @spec new(3 | 4 | 5 | 6 | 7 | 8 | 9 | 10) :: __MODULE__.t()
+  @spec new(word_length) :: __MODULE__.t()
   def new(word_length)
       when is_integer(word_length) and word_length >= 3 and word_length <= 10 do
     struct!(__MODULE__, word_length: word_length)
@@ -125,14 +126,15 @@ defmodule WeDle.Game.Board do
       target_graph = Enum.at(target_graphs, i)
 
       if graph == target_graph do
-        comps = List.insert_at(acc.comps, -1, {0, graph})
+        comps = [{0, graph} | acc.comps]
         distro = Map.update(acc.distro, graph, 1, &(&1 + 1))
         %{acc | distro: distro, comps: comps}
       else
-        comps = List.insert_at(acc.comps, -1, {:cont, graph})
+        comps = [{:cont, graph} | acc.comps]
         %{acc | comps: comps}
       end
     end)
+    |> Map.update!(:comps, &Enum.reverse/1)
   end
 
   defp compare_possible_matches(first_pass, target_graphs, max_index) do

@@ -7,7 +7,8 @@ defmodule WeDle.Game.Board do
   defstruct [
     :word_length,
     rows: [[], [], [], [], [], []],
-    turns: 0
+    turns: 0,
+    solved: false
   ]
 
   @type row_entry :: {0 | 1 | 2, String.t()}
@@ -17,7 +18,8 @@ defmodule WeDle.Game.Board do
   @type t :: %__MODULE__{
           word_length: word_length,
           rows: [row],
-          turns: turn
+          turns: turn,
+          solved: boolean
         }
 
   @doc """
@@ -65,14 +67,16 @@ defmodule WeDle.Game.Board do
       %WeDle.Game.Board{
         rows: [[{2, "h"}, {2, "e"}, {2, "l"}, {0, "l"}, {1, "o"}], [], [], [], [], []],
         word_length: 5,
-        turns: 1
+        turns: 1,
+        solved: false
       }
 
       iex> WeDle.Game.Board.new(5) |> WeDle.Game.Board.insert("hello", "hello")
       %WeDle.Game.Board{
         rows: [[{0, "h"}, {0, "e"}, {0, "l"}, {0, "l"}, {0, "o"}], [], [], [], [], []],
         word_length: 5,
-        turns: 1
+        turns: 1,
+        solved: true
       }
   """
   def insert(%__MODULE__{} = board, word, target)
@@ -83,13 +87,13 @@ defmodule WeDle.Game.Board do
          :ok <- validate_board_is_not_full(board) do
       target_graphs = String.graphemes(target)
 
-      graphs
-      |> compare(target_graphs)
-      |> insert(board)
+      board
+      |> compare(graphs, target_graphs)
+      |> insert()
     end
   end
 
-  defp insert(comparison, %{rows: rows, turns: turns} = board) do
+  defp insert({%{rows: rows, turns: turns} = board, comparison}) do
     %{
       board
       | rows: List.replace_at(rows, turns, comparison),
@@ -105,11 +109,11 @@ defmodule WeDle.Game.Board do
   defp validate_board_is_not_full(%{turns: turns}) when turns < 6, do: :ok
   defp validate_board_is_not_full(%{turns: _turns}), do: {:error, :board_full}
 
-  defp compare(graphs, target_graphs) when graphs == target_graphs,
-    do: Enum.map(graphs, &{0, &1})
+  defp compare(board, graphs, target_graphs) when graphs == target_graphs,
+    do: {%{board | solved: true}, Enum.map(graphs, &{0, &1})}
 
-  defp compare(graphs, target_graphs),
-    do: compare_letters(graphs, target_graphs)
+  defp compare(board, graphs, target_graphs),
+    do: {board, compare_letters(graphs, target_graphs)}
 
   defp compare_letters(graphs, target_graphs) do
     max_index = length(graphs) - 1

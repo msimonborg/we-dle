@@ -45,7 +45,7 @@ defmodule WeDle.Game.Server do
   def init(opts) do
     game_id = Keyword.fetch!(opts, :game_id)
     word_length = Keyword.fetch!(opts, :word_length)
-
+    :timer.send_interval(10_000, :ping)
     {:ok, struct!(Game, id: game_id, word_length: word_length)}
   end
 
@@ -78,6 +78,28 @@ defmodule WeDle.Game.Server do
     {:noreply, %{game | players: Map.put(players, player.id, player)}}
   end
 
+  def handle_info(:ping, %{edge_servers: edge_servers} = game) do
+    Enum.each(edge_servers, fn {id, edge} ->
+      send(edge.pid, {:ping, self(), id, :erlang.monotonic_time(:millisecond)})
+    end)
+
+    {:noreply, game}
+  end
+
+  def handle_info({:pong, id, time}, %{edge_servers: edge_servers} = game) do
+    case Map.get(edge_servers, id) do
+      nil ->
+        {:noreply, game}
+
+      %{} = edge ->
+        pings = edge.pings + 1
+        interval = :erlang.monotonic_time(:millisecond) - time
+        avg_latency = (edge.pings * edge.avg_latency + interval) / pings
+        edge = %{edge | pings: pings, avg_latency: avg_latency}
+        {:noreply, %{game | edge_servers: Map.replace!(edge_servers, id, edge)}}
+    end
+  end
+
   def handle_info({:DOWN, ref, _, _, _}, %{edge_servers: edge_servers} = game) do
     Process.demonitor(ref, [:flush])
     {player_id, _} = Enum.find(edge_servers, fn {_, edge} -> edge.ref == ref end)
@@ -89,7 +111,8 @@ defmodule WeDle.Game.Server do
   defp do_join_game(game, player_id, player, opponent, pid) do
     if edge = Map.get(game.edge_servers, player_id), do: Process.demonitor(edge.ref, [:flush])
     ref = Process.monitor(pid)
-    edge_servers = Map.put_new(game.edge_servers, player_id, %{ref: ref, pid: pid})
+    new_edge = %{ref: ref, pid: pid, pings: 0, avg_latency: 0}
+    edge_servers = Map.put(game.edge_servers, player_id, new_edge)
     players = Map.put_new(game.players, player_id, player)
     game = %{game | edge_servers: edge_servers, players: players}
     reply = %{player: player, opponent: opponent}

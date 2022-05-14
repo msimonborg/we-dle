@@ -24,7 +24,14 @@ defmodule WeDle.Game do
           id: id,
           word_length: pos_integer,
           players: %{id => player},
-          edge_servers: %{id => %{ref: reference, pid: pid}},
+          edge_servers: %{
+            id => %{
+              ref: reference,
+              pid: pid,
+              pings: non_neg_integer,
+              avg_latency: non_neg_integer
+            }
+          },
           winner: player | nil
         }
 

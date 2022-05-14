@@ -133,6 +133,11 @@ defmodule WeDle.Game.EdgeServer do
     {:noreply, %{state | opponent: opponent}}
   end
 
+  def handle_info({:ping, server, id, time}, state) do
+    send(server, {:pong, id, time})
+    {:noreply, state}
+  end
+
   def handle_info({:DOWN, ref, _, _, _}, state) do
     Process.demonitor(ref, [:flush])
     {:noreply, %{state | client_pid: nil}}

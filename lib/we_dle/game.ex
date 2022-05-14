@@ -73,8 +73,18 @@ defmodule WeDle.Game do
   """
   @spec join(id, id) :: {:ok, player} | {:error, term}
   def join(game_id, player_id) do
+    case whereis(game_id) do
+      pid when is_pid(pid) ->
+        join(pid, game_id, player_id)
+
+      nil ->
+        {:error, :game_not_found}
+    end
+  end
+
+  defp join(pid, game_id, player_id) do
     EdgeSupervisor.start_edge(game_id, player_id)
-    EdgeServer.join_game(game_id, player_id)
+    EdgeServer.join_game(pid, game_id, player_id)
   end
 
   @doc """
@@ -95,7 +105,7 @@ defmodule WeDle.Game do
   @spec start_or_join(id, id, options) :: {:ok, player} | {:error, term}
   def start_or_join(game_id, player_id, opts \\ []) do
     case start(game_id, opts) do
-      {:ok, _pid} -> join(game_id, player_id)
+      {:ok, pid} -> join(pid, game_id, player_id)
       :ignore -> join(game_id, player_id)
       {:error, _reason} = error -> error
     end

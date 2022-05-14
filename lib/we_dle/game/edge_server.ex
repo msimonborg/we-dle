@@ -64,10 +64,10 @@ defmodule WeDle.Game.EdgeServer do
     {:via, Registry, {EdgeRegistry, "#{player_id}@#{game_id}"}}
   end
 
-  def join_game(game_id, player_id) do
+  def join_game(pid, game_id, player_id) do
     game_id
     |> name(player_id)
-    |> GenServer.call(:join_game)
+    |> GenServer.call({:join_game, pid})
   end
 
   # -- Callbacks --
@@ -87,12 +87,12 @@ defmodule WeDle.Game.EdgeServer do
   end
 
   @impl true
-  def handle_call(:join_game, {pid, _} = from, %{client_pid: nil} = state) do
-    handle_call(:join_game, from, %{state | client_pid: pid})
+  def handle_call({:join_game, game_pid}, {client_pid, _} = from, %{client_pid: nil} = state) do
+    handle_call({:join_game, game_pid}, from, %{state | client_pid: client_pid})
   end
 
-  def handle_call(:join_game, _, %{game_name: game_name, player_id: player_id} = state) do
-    case GenServer.call(game_name, {:join_game, player_id}) do
+  def handle_call({:join_game, game_pid}, _, %{player_id: player_id} = state) do
+    case GenServer.call(game_pid, {:join_game, player_id}) do
       {:ok, %{player: player, opponent: opponent}} ->
         {:reply, {:ok, player}, %{state | player: player, opponent: opponent}}
 

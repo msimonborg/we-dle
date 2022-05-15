@@ -19,4 +19,5 @@ echo Attempting to connect to $FULL_NODE_NAME
 # Export the BEAM settings for running the "iex" command.
 # This creates a local node named "my_remote". The name used isn't important.
 # The cookie must match the cookie used in your project so the two nodes can connect.
-iex --erl "-proto_dist inet6_tcp" --sname my_remote --cookie ${RELEASE_COOKIE} -e "IO.inspect(Node.connect(:'${FULL_NODE_NAME}'), label: \"Node Connected?\"); IO.inspect(Node.list(), label: \"Connected Nodes\"); :observer.start" -S mix
+# Waits for 5 seconds after connecting to the first node to finish connecting the rest of the cluster.
+iex --erl "-proto_dist inet6_tcp" --sname my_remote --cookie ${RELEASE_COOKIE} -e "IO.inspect(Node.connect(:'${FULL_NODE_NAME}'), label: \"Node Connected?\"); IO.puts(\"Waiting five seconds to finish connecting to other nodes in the cluster\"); Process.sleep(5000); IO.inspect(Node.list(), label: \"Connected Nodes\"); :observer.start"

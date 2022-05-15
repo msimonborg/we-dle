@@ -8,6 +8,7 @@ processes = []
 
 [deploy]
   release_command = "/app/bin/migrate"
+  strategy = "bluegreen"
 
 [env]
   PHX_HOST = "we-dle.fly.dev"

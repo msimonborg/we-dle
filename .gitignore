@@ -32,8 +32,15 @@ we_dle-*.tar
 npm-debug.log
 /assets/node_modules/
 
-/.fly_db
+.fly_db
 
-/*.pages
+*.pages
 
-/benchmarks/output
+# Ignore benchee benchmarking outputs
+benchmarks/output
+
+# Ignore direnv secrets
+.envrc
+
+# Ignore wireguard config
+*.conf

@@ -30,6 +30,9 @@ defmodule WeDle.Game.Supervisor do
   @impl true
   def init(_init_arg) do
     children = [
+      Game.Handoff,
+      # Set the initial Handoff neighbors
+      {Task, fn -> Game.Handoff.set_neighbors() end},
       Game.DistributedRegistry,
       Game.DistributedSupervisor,
       Game.NodeListener,

@@ -19,8 +19,7 @@ defmodule WeDle.Game.Handoff do
       name: __MODULE__,
       sync_interval: 10,
       max_sync_size: :infinite,
-      shutdown: 30_000,
-      on_diffs: fn diffs -> IO.inspect(diffs) end
+      shutdown: 30_000
     ]
 
     DeltaCrdt.child_spec(opts)

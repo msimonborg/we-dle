@@ -148,7 +148,9 @@ defmodule WeDle.Game.Server do
 
   @impl true
   def terminate(_reason, game) do
-    Handoff.put(game.id, %{game | edge_servers: %{}})
+    game = %{game | edge_servers: %{}}
+
+    Handoff.put(game.id, game, :infinity)
   end
 
   # -- Private Helpers --

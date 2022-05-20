@@ -149,6 +149,7 @@ defmodule WeDle.Game do
       iex> WeDle.Game.start_or_join("spirits_game", "p1", word_length: 6)
       iex> WeDle.Game.start_or_join("spirits_game", "p2", word_length: 6)
       iex> WeDle.Game.set_challenge("spirits_game", "p1", "whisky")
+      iex> Process.sleep(1) # Wait for messages to be processed
       iex> {:ok, player} = WeDle.Game.submit_word("spirits_game", "p2", "scotch")
       iex> player.board.rows
       [[{1, "s"}, {2, "c"}, {2, "o"}, {2, "t"}, {2, "c"}, {1, "h"}], [], [], [], [], []]

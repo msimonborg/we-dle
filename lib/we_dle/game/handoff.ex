@@ -9,8 +9,6 @@ defmodule WeDle.Game.Handoff do
 
   alias WeDle.{Game, Game.Handoff}
 
-  defstruct [:sync_interval, :handoff_pid]
-
   @type game :: Game.t()
   @type game_id :: String.t()
   @type value :: game | nil

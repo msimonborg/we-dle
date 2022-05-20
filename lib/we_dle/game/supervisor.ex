@@ -3,16 +3,24 @@ defmodule WeDle.Game.Supervisor do
   The `WeDle.Game.Supervisor` starts and supervises the
   game system. This includes the following child processes:
 
-    * `WeDle.Game.DistributedSupervisor` and to start and supervise
-  `WeDle.Game.Server`s across the cluster
+    * `WeDle.Game.Handoff.Supervisor` supervises processes responsible
+    for game state handoff
 
     * `Wedle.Game.DistributedRegistry` to register and lookup
     `WeDle.Game.Server` processes across the cluster
 
+    * `WeDle.Game.DistributedSupervisor` and to start and supervise
+    `WeDle.Game.Server`s across the cluster
+
     * `WeDle.Game.NodeListener` to keep cluster membership up to date
+
+    * `WeDle.Game.EdgeRegistry` to register local `WeDle.Game.EdgeServer`s
 
     * `WeDle.Game.EdgeSupervisor` to start and supervise
     `WeDle.Game.EdgeServer`s locally on the same node as the player
+
+    * `WeDle.Game.ShutdownSignal` sends an early shutdown warning to
+    interested processes
   """
 
   use Supervisor

@@ -13,6 +13,12 @@ defmodule WeDle.Game.Handoff.Orchestrator do
 
   defstruct [:tasksup, node_status: :alive]
 
+  @type node_status :: :alive | :shutdown
+  @type t :: %__MODULE__{
+          tasksup: pid,
+          node_status: node_status
+        }
+
   # -- Client API --
 
   def start_link(init_arg) do

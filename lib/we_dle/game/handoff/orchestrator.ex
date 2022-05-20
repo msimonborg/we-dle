@@ -54,6 +54,7 @@ defmodule WeDle.Game.Handoff.Orchestrator do
       )
 
     {:ok, pid} = Task.Supervisor.start_link()
+
     {:ok, %__MODULE__{tasksup: pid}}
   end
 

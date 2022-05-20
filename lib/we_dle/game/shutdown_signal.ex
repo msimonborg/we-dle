@@ -16,11 +16,13 @@ defmodule WeDle.Game.ShutdownSignal do
 
   # -- Callbacks --
 
+  @impl true
   def init(_init_arg) do
     Process.flag(:trap_exit, true)
     {:ok, []}
   end
 
+  @impl true
   def terminate(:shutdown, _state), do: signal_shutdown()
   def terminate({:shutdown, _}, _state), do: signal_shutdown()
 

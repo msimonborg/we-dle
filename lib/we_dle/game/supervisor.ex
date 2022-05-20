@@ -30,14 +30,13 @@ defmodule WeDle.Game.Supervisor do
   @impl true
   def init(_init_arg) do
     children = [
-      Game.Handoff,
-      # Set the initial Handoff neighbors
-      {Task, fn -> Game.Handoff.set_neighbors() end},
+      Game.Handoff.Supervisor,
       Game.DistributedRegistry,
       Game.DistributedSupervisor,
       Game.NodeListener,
       {Registry, keys: :unique, name: Game.EdgeRegistry, partitions: System.schedulers_online()},
-      Game.EdgeSupervisor
+      Game.EdgeSupervisor,
+      Game.ShutdownSignal
     ]
 
     Supervisor.init(children, strategy: :one_for_one)

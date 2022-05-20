@@ -21,7 +21,7 @@ defmodule WeDle.MixProject do
   def application do
     [
       mod: {WeDle.Application, []},
-      extra_applications: [:logger, :os_mon, :runtime_tools]
+      extra_applications: [:logger, :os_mon, :observer, :runtime_tools]
     ]
   end
 

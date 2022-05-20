@@ -7,22 +7,25 @@ defmodule WeDle.Game.Handoff do
   changes to cluster topology.
   """
 
-  alias WeDle.Game
+  alias WeDle.{Game, Game.Handoff}
+
+  defstruct [:sync_interval, :handoff_pid]
 
   @type game :: Game.t()
   @type game_id :: String.t()
   @type value :: game | nil
 
+  # -- Client API --
+
   def child_spec(_) do
-    opts = [
+    DeltaCrdt.child_spec(
       crdt: DeltaCrdt.AWLWWMap,
       name: __MODULE__,
-      sync_interval: 10,
+      sync_interval: 100,
       max_sync_size: :infinite,
-      shutdown: 30_000
-    ]
-
-    DeltaCrdt.child_spec(opts)
+      shutdown: 60_000,
+      on_diffs: {Handoff.Orchestrator, :process_diffs, []}
+    )
   end
 
   @doc """

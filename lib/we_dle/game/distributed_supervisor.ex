@@ -12,7 +12,7 @@ defmodule WeDle.Game.DistributedSupervisor do
   # -- Client API --
 
   def start_link(_) do
-    opts = [strategy: :one_for_one, shutdown: 5_000]
+    opts = [strategy: :one_for_one, shutdown: 60_000]
     Horde.DynamicSupervisor.start_link(__MODULE__, opts, name: __MODULE__)
   end
 

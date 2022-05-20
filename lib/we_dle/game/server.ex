@@ -4,7 +4,7 @@ defmodule WeDle.Game.Server do
   events to subscribers of that game.
   """
 
-  use GenServer, shutdown: 5_000, restart: :transient
+  use GenServer, shutdown: 10_000, restart: :transient
 
   require Logger
 
@@ -44,10 +44,12 @@ defmodule WeDle.Game.Server do
   @impl true
   def init(opts) do
     Process.flag(:trap_exit, true)
-    :timer.send_interval(10_000, :ping)
 
     game_id = Keyword.fetch!(opts, :game_id)
     word_length = Keyword.fetch!(opts, :word_length)
+
+    register_for_handoff(game_id)
+    :timer.send_interval(10_000, :ping)
 
     {:ok, {game_id, word_length}, {:continue, :load_game}}
   end
@@ -56,11 +58,16 @@ defmodule WeDle.Game.Server do
   def handle_continue(:load_game, {game_id, word_length}) do
     game =
       case Handoff.get(game_id) do
-        %Game{} = game -> game
-        _ -> struct!(Game, id: game_id, word_length: word_length)
+        %Game{} = game ->
+          unregister_for_handoff(game_id)
+          Handoff.delete(game_id)
+          game
+
+        _ ->
+          Process.send_after(self(), :unregister_for_handoff, 60_000)
+          struct!(Game, id: game_id, word_length: word_length)
       end
 
-    Handoff.delete(game_id)
     {:noreply, game}
   end
 
@@ -88,6 +95,16 @@ defmodule WeDle.Game.Server do
   end
 
   @impl true
+  def handle_info({:handoff, game}, _stale_game) do
+    unregister_for_handoff(game.id)
+    {:noreply, game}
+  end
+
+  def handle_info(:unregister_for_handoff, game) do
+    unregister_for_handoff(game.id)
+    {:noreply, game}
+  end
+
   def handle_info({:update_player, player}, %{players: players} = game) do
     send_update_to_opponent(game, player)
     {:noreply, %{game | players: Map.put(players, player.id, player)}}
@@ -131,10 +148,7 @@ defmodule WeDle.Game.Server do
 
   @impl true
   def terminate(_reason, game) do
-    Handoff.put(game.id, game)
-    # Sleep to allow the handoff to propagate
-    # before continuing shutdown
-    Process.sleep(50)
+    Handoff.put(game.id, %{game | edge_servers: %{}})
   end
 
   # -- Private Helpers --
@@ -165,6 +179,14 @@ defmodule WeDle.Game.Server do
     end
 
     opponent
+  end
+
+  defp register_for_handoff(game_id) do
+    Registry.register(Handoff.Registry, game_id, [])
+  end
+
+  defp unregister_for_handoff(game_id) do
+    Registry.unregister(Handoff.Registry, game_id)
   end
 
   defp get_player(%{players: players} = game, player_id) do

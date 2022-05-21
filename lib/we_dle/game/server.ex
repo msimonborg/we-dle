@@ -147,9 +147,10 @@ defmodule WeDle.Game.Server do
   end
 
   @impl true
-  def terminate(_reason, game) do
-    game = %{game | edge_servers: %{}}
+  def terminate(:normal, _), do: :ok
 
+  def terminate(_, game) do
+    game = %{game | edge_servers: %{}}
     Handoff.put(game.id, game, :infinity)
   end
 
@@ -169,18 +170,14 @@ defmodule WeDle.Game.Server do
   end
 
   defp send_update_to_opponent(game, player) do
-    opponent =
-      case get_opponent(game, player.id) do
-        {:ok, opponent} -> opponent
-        {:error, _} -> nil
-      end
-
-    if opponent do
-      pid = game.edge_servers[opponent.id].pid
+    with {:ok, opponent} <- get_opponent(game, player.id),
+         {:ok, opponent_edge} <- Map.fetch(game.edge_servers, opponent.id),
+         {:ok, pid} <- Map.fetch(opponent_edge, :pid) do
       send(pid, {:update_opponent, player})
+      opponent
+    else
+      _ -> nil
     end
-
-    opponent
   end
 
   defp register_for_handoff(game_id) do

@@ -7,24 +7,17 @@ defmodule WeDle.Game.Handoff do
   changes to cluster topology.
   """
 
+  use GenServer, shutdown: 60_000
+
   alias WeDle.{Game, Game.Handoff}
+
+  defstruct [:sync_interval, :sup_pid]
 
   @type game :: Game.t()
   @type game_id :: String.t()
   @type value :: game | nil
 
   # -- Client API --
-
-  def child_spec(_) do
-    DeltaCrdt.child_spec(
-      crdt: DeltaCrdt.AWLWWMap,
-      name: __MODULE__,
-      sync_interval: 100,
-      max_sync_size: :infinite,
-      shutdown: 60_000,
-      on_diffs: {Handoff.Orchestrator, :process_diffs, []}
-    )
-  end
 
   @doc """
   Set the neighbors of the CRDT handoff within the cluster.
@@ -69,5 +62,38 @@ defmodule WeDle.Game.Handoff do
   @spec to_map(timeout) :: %{game_id => game}
   def to_map(timeout \\ 5000) do
     DeltaCrdt.to_map(__MODULE__, timeout)
+  end
+
+  def start_link(init_arg) do
+    GenServer.start_link(__MODULE__, init_arg)
+  end
+
+  # -- Callbacks --
+
+  @impl true
+  def init(_init_arg) do
+    Process.flag(:trap_exit, true)
+
+    sync_interval = 100
+
+    children = [
+      {DeltaCrdt,
+       crdt: DeltaCrdt.AWLWWMap,
+       name: __MODULE__,
+       sync_interval: sync_interval,
+       max_sync_size: :infinite,
+       shutdown: 60_000,
+       on_diffs: {Handoff.Orchestrator, :process_diffs, []}}
+    ]
+
+    {:ok, sup_pid} = Supervisor.start_link(children, strategy: :one_for_one)
+
+    {:ok, struct!(__MODULE__, sync_interval: sync_interval, sup_pid: sup_pid)}
+  end
+
+  @impl true
+  def terminate(_, state) do
+    send(__MODULE__, :sync)
+    Process.sleep(state.sync_interval * 10)
   end
 end

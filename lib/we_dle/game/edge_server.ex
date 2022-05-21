@@ -18,7 +18,17 @@ defmodule WeDle.Game.EdgeServer do
     Player
   }
 
-  defstruct [:player_id, :player, :opponent, :game_id, :game_name, :client_pid]
+  defstruct [
+    :player_id,
+    :player,
+    :opponent,
+    :game_id,
+    :game_name,
+    :game_pid,
+    :game_monitor,
+    :client_pid,
+    :client_monitor
+  ]
 
   @type game_name :: {:via, Horde.Registry, {DistributedRegistry, String.t()}}
   @type name :: {:via, Registry, {EdgeRegistry, String.t()}}
@@ -29,7 +39,10 @@ defmodule WeDle.Game.EdgeServer do
           opponent: player,
           game_id: String.t(),
           game_name: game_name,
-          client_pid: pid
+          game_pid: pid,
+          game_monitor: reference,
+          client_pid: pid,
+          client_monitor: reference
         }
 
   # -- Client API --
@@ -74,15 +87,20 @@ defmodule WeDle.Game.EdgeServer do
 
   @impl true
   def init({game_id, player_id, client_pid}) do
-    Process.monitor(client_pid)
     game_name = game_name(game_id)
+    game_pid = GenServer.whereis(game_name)
+    game_monitor = Process.monitor(game_pid)
+    client_monitor = Process.monitor(client_pid)
 
     {:ok,
      struct!(__MODULE__,
        game_name: game_name,
        game_id: game_id,
+       game_pid: game_pid,
+       game_monitor: game_monitor,
        player_id: player_id,
-       client_pid: client_pid
+       client_pid: client_pid,
+       client_monitor: client_monitor
      )}
   end
 
@@ -138,9 +156,21 @@ defmodule WeDle.Game.EdgeServer do
     {:noreply, state}
   end
 
-  def handle_info({:DOWN, ref, _, _, _}, state) do
+  def handle_info(
+        {:DOWN, ref, _, _, reason},
+        %{game_monitor: game_monitor, client_monitor: client_monitor} = state
+      ) do
     Process.demonitor(ref, [:flush])
-    {:noreply, %{state | client_pid: nil}}
+
+    case ref do
+      ^game_monitor ->
+        pid = state.client_pid
+        if pid && Process.alive?(pid), do: send(pid, {:game_down, reason})
+        {:stop, reason, %{state | game_pid: nil, game_monitor: nil}}
+
+      ^client_monitor ->
+        {:noreply, %{state | client_pid: nil, client_monitor: nil}}
+    end
   end
 
   # -- Private Helpers --
@@ -150,9 +180,11 @@ defmodule WeDle.Game.EdgeServer do
   end
 
   defp send_player_update_to_game(game_id, player) do
-    game_id
-    |> Game.whereis()
-    |> send({:update_player, player})
+    name = Game.name(game_id)
+
+    with pid when is_pid(pid) <- GenServer.whereis(name) do
+      send(pid, {:update_player, player})
+    end
   end
 
   defp ensure_challenge_is_set(player) do

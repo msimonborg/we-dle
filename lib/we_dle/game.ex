@@ -84,7 +84,7 @@ defmodule WeDle.Game do
       pid when is_pid(pid) ->
         join(pid, game_id, player_id)
 
-      nil ->
+      _ ->
         {:error, :game_not_found}
     end
   end
@@ -164,10 +164,16 @@ defmodule WeDle.Game do
   Returns the `pid` of the game with the given `game_id`.
   """
   def whereis(game_id) do
-    case Horde.Registry.lookup(DistributedRegistry, game_id) do
-      [{pid, _}] when is_pid(pid) -> pid
-      _ -> nil
-    end
+    game_id
+    |> name()
+    |> GenServer.whereis()
+  end
+
+  @doc """
+  Returns the name for registration of the game with the given `game_id`.
+  """
+  def name(game_id) do
+    DistributedRegistry.via_tuple(game_id)
   end
 
   # defp game_name(game_id) when is_binary(game_id), do: DistributedRegistry.via_tuple(game_id)

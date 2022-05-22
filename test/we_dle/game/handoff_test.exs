@@ -19,9 +19,6 @@ defmodule WeDle.Game.HandoffTest do
       game_pid = whereis(game)
       assert is_pid(game_pid)
 
-      # The handoff should be empty
-      assert Handoff.to_map() == Map.new()
-
       # Shutdown the process and allow the handoff time to sync
       Process.exit(game_pid, :shutdown)
       send(Handoff, :sync)
@@ -42,7 +39,7 @@ defmodule WeDle.Game.HandoffTest do
 
       # The game is alive and the handoff is empty again
       assert whereis(game) |> is_pid()
-      assert Handoff.to_map() == Map.new()
+      assert Handoff.to_map() |> Map.get(game) |> is_nil()
     end
 
     test "a game will receive a newly synced state handoff after the game has started" do
@@ -50,8 +47,6 @@ defmodule WeDle.Game.HandoffTest do
 
       {:ok, %Player{challenge: nil}} = start_or_join(game, "p1")
       {:ok, %Player{challenge: nil}} = start_or_join(game, "p2")
-
-      assert Handoff.to_map() == Map.new()
 
       handoff_state = %WeDle.Game{
         edge_servers: %{},
@@ -106,18 +101,12 @@ defmodule WeDle.Game.HandoffTest do
       game_pid = whereis(game)
       assert is_pid(game_pid)
 
-      # The handoff should be empty
-      assert Handoff.to_map() == Map.new()
-
       # Shutdown the process with a reason of :normal and allow the handoff time to sync
       Process.exit(game_pid, :normal)
       send(Handoff, :sync)
       Process.sleep(10)
 
       assert whereis(game) |> is_nil()
-
-      # Assert that the game state is not stored in the handoff
-      assert Handoff.to_map() == Map.new()
 
       # Assert that the handoff is not retrieved by the newly started game instance
       assert {:ok, %Player{challenge: nil}} = start_or_join(game, "p1")

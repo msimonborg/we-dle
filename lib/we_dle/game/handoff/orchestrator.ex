@@ -11,13 +11,10 @@ defmodule WeDle.Game.Handoff.Orchestrator do
 
   alias WeDle.Game.Handoff
 
-  defstruct [:tasksup, node_status: :alive]
+  defstruct node_status: :alive
 
   @type node_status :: :alive | :shutdown
-  @type t :: %__MODULE__{
-          tasksup: pid,
-          node_status: node_status
-        }
+  @type t :: %__MODULE__{node_status: node_status}
 
   # -- Client API --
 
@@ -52,16 +49,7 @@ defmodule WeDle.Game.Handoff.Orchestrator do
 
   @impl true
   def init(_init_arg) do
-    {:ok, _pid} =
-      Registry.start_link(
-        keys: :unique,
-        name: Handoff.Registry,
-        partitions: System.schedulers_online()
-      )
-
-    {:ok, pid} = Task.Supervisor.start_link()
-
-    {:ok, %__MODULE__{tasksup: pid}}
+    {:ok, %__MODULE__{}}
   end
 
   @impl true
@@ -70,20 +58,20 @@ defmodule WeDle.Game.Handoff.Orchestrator do
   end
 
   def handle_cast({:process_diffs, [{_, _} = diff]}, state) do
-    Task.Supervisor.start_child(state.tasksup, __MODULE__, :process_diff, [diff])
+    Task.Supervisor.start_child(Handoff.TaskSup, __MODULE__, :process_diff, [diff])
     {:noreply, state}
   end
 
   def handle_cast({:process_diffs, diffs}, state) do
     stream =
-      Task.Supervisor.async_stream_nolink(state.tasksup, diffs, __MODULE__, :process_diff, [],
+      Task.Supervisor.async_stream_nolink(Handoff.TaskSup, diffs, __MODULE__, :process_diff, [],
         ordered: false,
         on_timeout: :kill_task,
         shutdown: :brutal_kill,
         max_concurrency: System.schedulers_online()
       )
 
-    Task.Supervisor.start_child(state.tasksup, Enum, :to_list, [stream])
+    Task.Supervisor.start_child(Handoff.TaskSup, Enum, :to_list, [stream])
 
     {:noreply, state}
   end

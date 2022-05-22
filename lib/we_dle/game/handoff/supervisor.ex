@@ -19,6 +19,8 @@ defmodule WeDle.Game.Handoff.Supervisor do
   @impl true
   def init(_init_arg) do
     children = [
+      {Registry, keys: :unique, name: Handoff.Registry, partitions: System.schedulers_online()},
+      {Task.Supervisor, name: Handoff.TaskSup},
       Handoff.Orchestrator,
       Handoff
     ]

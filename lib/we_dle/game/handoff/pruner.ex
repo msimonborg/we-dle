@@ -40,6 +40,7 @@ defmodule WeDle.Game.Handoff.Pruner do
 
   @impl true
   def init(_init_arg) do
+    send(self(), :prune)
     ets = :ets.new(:pruner_table, [:public])
     :timer.send_interval(@pruning_interval, :prune)
     {:ok, %__MODULE__{ets: ets}}

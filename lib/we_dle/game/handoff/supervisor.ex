@@ -22,6 +22,7 @@ defmodule WeDle.Game.Handoff.Supervisor do
       {Registry, keys: :unique, name: Handoff.Registry, partitions: System.schedulers_online()},
       {Task.Supervisor, name: Handoff.TaskSup},
       Handoff.Orchestrator,
+      Handoff.Pruner,
       Handoff
     ]
 

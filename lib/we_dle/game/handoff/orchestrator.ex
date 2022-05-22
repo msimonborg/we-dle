@@ -43,8 +43,6 @@ defmodule WeDle.Game.Handoff.Orchestrator do
     end
   end
 
-  def process_diff({:remove, _, _}), do: :noop
-
   # -- Callbacks --
 
   @impl true

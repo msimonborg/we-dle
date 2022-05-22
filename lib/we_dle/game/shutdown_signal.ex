@@ -28,5 +28,6 @@ defmodule WeDle.Game.ShutdownSignal do
 
   defp signal_shutdown do
     GenServer.cast(Handoff.Orchestrator, :shutting_down)
+    GenServer.cast(Handoff.Pruner, :shutting_down)
   end
 end

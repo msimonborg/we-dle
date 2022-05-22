@@ -68,6 +68,12 @@ defmodule WeDle.Game.Handoff do
     GenServer.start_link(__MODULE__, init_arg)
   end
 
+  @doc false
+  def on_diffs(diffs) do
+    Handoff.Orchestrator.process_diffs(diffs)
+    Handoff.Pruner.process_diffs(diffs)
+  end
+
   # -- Callbacks --
 
   @impl true
@@ -83,7 +89,7 @@ defmodule WeDle.Game.Handoff do
        sync_interval: sync_interval,
        max_sync_size: :infinite,
        shutdown: 60_000,
-       on_diffs: {Handoff.Orchestrator, :process_diffs, []}}
+       on_diffs: {__MODULE__, :on_diffs, []}}
     ]
 
     {:ok, sup_pid} = Supervisor.start_link(children, strategy: :one_for_one)

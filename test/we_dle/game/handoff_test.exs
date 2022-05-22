@@ -25,7 +25,7 @@ defmodule WeDle.Game.HandoffTest do
       # Shutdown the process and allow the handoff time to sync
       Process.exit(game_pid, :shutdown)
       send(Handoff, :sync)
-      Process.sleep(5)
+      Process.sleep(10)
 
       assert whereis(game) |> is_nil()
 
@@ -87,7 +87,7 @@ defmodule WeDle.Game.HandoffTest do
       Handoff.put(game, handoff_state)
       send(Handoff, :sync)
 
-      Process.sleep(5)
+      Process.sleep(10)
 
       assert {:ok, %Player{challenge: "hello"}} = start_or_join(game, "p1")
       assert {:ok, %Player{challenge: "world"}} = start_or_join(game, "p2")
@@ -112,7 +112,7 @@ defmodule WeDle.Game.HandoffTest do
       # Shutdown the process with a reason of :normal and allow the handoff time to sync
       Process.exit(game_pid, :normal)
       send(Handoff, :sync)
-      Process.sleep(5)
+      Process.sleep(10)
 
       assert whereis(game) |> is_nil()
 

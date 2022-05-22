@@ -70,6 +70,10 @@ defmodule WeDle.Game do
   Returns `{:ok, player}` where `player` is a `WeDle.Game.Player` struct representing
   the player that just joined, or `{:error, reason}`.
 
+  When joining a game, a `WeDle.Game.EdgeServer` is spawned to provide the connection,
+  forwarding messages and changes and state between client and server. If the game is
+  stopped a message will be sent to the client's inbox in the form `{:game_down, reason}`.
+
   ## Examples
 
       iex> WeDle.Game.start("diva_game")

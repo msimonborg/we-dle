@@ -1,5 +1,5 @@
 defmodule WeDle.Game.HandoffTest do
-  use ExUnit.Case, async: true
+  use ExUnit.Case
 
   import WeDle.Game
 

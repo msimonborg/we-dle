@@ -169,7 +169,7 @@ defmodule WeDle.Game.EdgeServer do
         {:stop, reason, %{state | game_pid: nil, game_monitor: nil}}
 
       ^client_monitor ->
-        {:noreply, %{state | client_pid: nil, client_monitor: nil}}
+        {:stop, reason, %{state | client_pid: nil, client_monitor: nil}}
     end
   end
 

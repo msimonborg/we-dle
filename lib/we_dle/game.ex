@@ -7,11 +7,11 @@ defmodule WeDle.Game do
 
   alias WeDle.Game.{
     DistributedRegistry,
-    DistributedSupervisor,
     EdgeServer,
     EdgeSupervisor,
     Player,
-    Server
+    Server,
+    ServerSupervisor
   }
 
   defstruct [:id, :word_length, :winner, players: %{}, edge_servers: %{}]
@@ -61,7 +61,7 @@ defmodule WeDle.Game do
       |> Keyword.put_new(:word_length, 5)
       |> Keyword.put(:game_id, game_id)
 
-    DistributedSupervisor.start_child({Server, opts})
+    ServerSupervisor.start_child({Server, opts})
   end
 
   @doc """

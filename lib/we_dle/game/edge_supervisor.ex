@@ -9,10 +9,12 @@ defmodule WeDle.Game.EdgeSupervisor do
 
   alias WeDle.Game.{EdgeServer, Player}
 
+  @partition_sup_name WeDle.Game.EdgeSupervisors
+
   # -- Client API --
 
   def start_link(init_arg) do
-    DynamicSupervisor.start_link(__MODULE__, init_arg, name: __MODULE__)
+    DynamicSupervisor.start_link(__MODULE__, init_arg)
   end
 
   @doc """
@@ -23,7 +25,7 @@ defmodule WeDle.Game.EdgeSupervisor do
   """
   def start_edge(game_id, player_id) do
     DynamicSupervisor.start_child(
-      __MODULE__,
+      rand_partition(),
       {EdgeServer, game_id: game_id, player_id: player_id, client_pid: self()}
     )
   end
@@ -37,15 +39,22 @@ defmodule WeDle.Game.EdgeSupervisor do
 
   @doc """
   Stops the `WeDle.Game.EdgeServer` identified by the given `game_id`
-  and `player_id`.
+  and `player_id`. If successful, this function returns `:ok`.
+  If no server is found, this function returns `{:error, :not_found}`.
   """
   def terminate_edge(game_id, player_id) do
-    pid =
-      game_id
-      |> EdgeServer.name(player_id)
-      |> GenServer.whereis()
+    game_id
+    |> EdgeServer.name(player_id)
+    |> GenServer.whereis()
+    |> case do
+      pid when is_pid(pid) -> GenServer.stop(pid)
+      _ -> {:error, :not_found}
+    end
+  end
 
-    DynamicSupervisor.terminate_child(__MODULE__, pid)
+  defp rand_partition do
+    partitions = PartitionSupervisor.partitions(@partition_sup_name)
+    {:via, PartitionSupervisor, {@partition_sup_name, Enum.random(1..partitions)}}
   end
 
   # -- Callbacks --

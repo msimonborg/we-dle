@@ -42,9 +42,9 @@ defmodule WeDle.Game.Supervisor do
       {Task, fn -> Game.Handoff.set_neighbors() end},
       Game.DistributedRegistry,
       Game.NodeListener,
-      Game.ServerSupervisor,
+      {PartitionSupervisor, child_spec: Game.ServerSupervisor, name: Game.ServerSupervisors},
       {Registry, keys: :unique, name: Game.EdgeRegistry, partitions: System.schedulers_online()},
-      Game.EdgeSupervisor,
+      {PartitionSupervisor, child_spec: Game.EdgeSupervisor, name: Game.EdgeSupervisors},
       Game.ShutdownSignal
     ]
 

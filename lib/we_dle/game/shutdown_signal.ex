@@ -25,6 +25,7 @@ defmodule WeDle.Game.ShutdownSignal do
   @impl true
   def terminate(:shutdown, _state), do: signal_shutdown()
   def terminate({:shutdown, _}, _state), do: signal_shutdown()
+  def terminate(_, _), do: :ok
 
   defp signal_shutdown do
     GenServer.cast(Handoff.Orchestrator, :shutting_down)

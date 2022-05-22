@@ -9,11 +9,13 @@ defmodule WeDle.Game.ServerSupervisor do
 
   use DynamicSupervisor
 
+  @partition_sup_name WeDle.Game.ServerSupervisors
+
   # -- Client API --
 
   def start_link(_) do
     opts = [strategy: :one_for_one, shutdown: 60_000]
-    DynamicSupervisor.start_link(__MODULE__, opts, name: __MODULE__)
+    DynamicSupervisor.start_link(__MODULE__, opts)
   end
 
   @doc """
@@ -23,7 +25,12 @@ defmodule WeDle.Game.ServerSupervisor do
   node in the cluster.
   """
   def start_child(child_spec) do
-    DynamicSupervisor.start_child(__MODULE__, child_spec)
+    DynamicSupervisor.start_child(rand_partition(), child_spec)
+  end
+
+  defp rand_partition do
+    partitions = PartitionSupervisor.partitions(@partition_sup_name)
+    {:via, PartitionSupervisor, {@partition_sup_name, Enum.random(1..partitions)}}
   end
 
   # -- Callbacks --

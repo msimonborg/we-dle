@@ -100,6 +100,6 @@ defmodule WeDle.Game.Handoff do
   @impl true
   def terminate(_, state) do
     send(__MODULE__, :sync)
-    Process.sleep(state.sync_interval * 10)
+    Process.sleep(state.sync_interval * 50)
   end
 end

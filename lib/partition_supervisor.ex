@@ -182,6 +182,8 @@
 # This source has copied from the original located at
 # https://github.com/elixir-lang/elixir/blob/442412929f00d21ad096910455d7d23c5fd1a112/lib/elixir/lib/partition_supervisor.ex
 
+# credo:disable-for-this-file
+
 defmodule PartitionSupervisor do
   @moduledoc """
   A supervisor that starts multiple partitions of the same child.

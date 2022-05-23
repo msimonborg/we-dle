@@ -8,6 +8,14 @@ defmodule WeDle.Game.Handoff.Listener do
   channel called "handoff_inserted", forwarding the
   notification to the game process if it exists on the local
   node.
+
+  We broadcast messages with Postgres on INSERT instead of using
+  `Phoenix.PubSub` because we are interested in knowing when the
+  record is actually available to read from the database, not when
+  the application code makes the insertion. This may be especially
+  important in a cluster when reading from read-only replicas, as
+  it is possible that a `Phoenix.PubSub` message is received on a
+  remote node before the insertion propogates to the nearest replica.
   """
 
   use GenServer

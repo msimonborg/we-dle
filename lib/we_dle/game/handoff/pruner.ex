@@ -34,7 +34,7 @@ defmodule WeDle.Game.Handoff.Pruner do
   def handle_info(:prune, %{node_status: :shutting_down} = state), do: {:noreply, state}
 
   def handle_info(:prune, state) do
-    Handoffs.delete_stale_handoffs(@pruning_interval, :millisecond)
+    Handoffs.delete_handoffs_older_than(@pruning_interval, :millisecond)
     {:noreply, state}
   end
 

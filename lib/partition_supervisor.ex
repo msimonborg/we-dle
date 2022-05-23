@@ -1,3 +1,7 @@
+# credo:disable-for-this-file
+
+# TODO: Remove this file after upgrading to Elixir 1.14
+
 #                                Apache License
 #                          Version 2.0, January 2004
 #                       http://www.apache.org/licenses/
@@ -179,10 +183,8 @@
 # Copyright 2021 The Elixir Team
 
 # From commit number cc4c837ace39c3c305133e8f1d853cc23a6fb32b
-# This source has copied from the original located at
+# This source was copied from the original located at
 # https://github.com/elixir-lang/elixir/blob/442412929f00d21ad096910455d7d23c5fd1a112/lib/elixir/lib/partition_supervisor.ex
-
-# credo:disable-for-this-file
 
 defmodule PartitionSupervisor do
   @moduledoc """

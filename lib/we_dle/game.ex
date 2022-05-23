@@ -253,6 +253,5 @@ defmodule WeDle.Game do
     })
   end
 
-  # defp game_name(game_id) when is_binary(game_id), do: DistributedRegistry.via_tuple(game_id)
   defp edge_name(game_id, player_id), do: EdgeServer.name(game_id, player_id)
 end

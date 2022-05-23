@@ -1,10 +1,10 @@
-defmodule WeDle.Game.Handoff.Worker do
+defmodule WeDle.Game.Handoff.Listener do
   @moduledoc """
-  The `WeDle.Game.Handoff.Worker` is in charge of
+  The `WeDle.Game.Handoff.Listener` is in charge of
   guaranteeing handoff states are delivered to the correct
   games on the local node.
 
-  The worker listens to notifications on a Postgres pubsub
+  The process listens to notifications on a Postgres pubsub
   channel called "handoff_inserted", forwarding the
   notification to the game process if it exists on the local
   node.
@@ -15,12 +15,17 @@ defmodule WeDle.Game.Handoff.Worker do
   require Logger
 
   alias Postgrex.Notifications
-  alias WeDle.Game.Handoff
+  alias WeDle.{Game.Handoff, Repo}
 
-  defstruct [:listener_ref, handoffs: [], counter: 0, node_status: :alive]
+  defstruct [:ref, :pid, handoffs: [], counter: 0, node_status: :alive]
 
-  @type node_status :: :alive | :shutting_down
-  @type t :: %__MODULE__{listener_ref: reference, node_status: node_status}
+  @type t :: %__MODULE__{
+          ref: reference,
+          pid: pid,
+          counter: non_neg_integer,
+          handoffs: [String.t()],
+          node_status: :alive | :shutting_down
+        }
 
   @channel "handoff_inserted"
 
@@ -35,8 +40,9 @@ defmodule WeDle.Game.Handoff.Worker do
   @impl true
   def init(_init_arg) do
     Process.flag(:trap_exit, true)
-    ref = Notifications.listen!(Handoff.Listener, @channel)
-    {:ok, %__MODULE__{listener_ref: ref}}
+    {:ok, pid} = Notifications.start_link(Repo.config())
+    ref = Notifications.listen!(pid, @channel)
+    {:ok, %__MODULE__{ref: ref, pid: pid}}
   end
 
   @impl true
@@ -47,7 +53,7 @@ defmodule WeDle.Game.Handoff.Worker do
     handle_info(msg, %{state | handoffs: [], counter: 0})
   end
 
-  def handle_info({:notification, _, ref, @channel, payload}, %{listener_ref: ref} = state) do
+  def handle_info({:notification, pid, ref, @channel, payload}, %{pid: pid, ref: ref} = state) do
     {:noreply, %{state | handoffs: [payload | state.handoffs], counter: state.counter + 1}, 5}
   end
 
@@ -87,7 +93,7 @@ defmodule WeDle.Game.Handoff.Worker do
   end
 
   @impl true
-  def terminate(_reason, %{listener_ref: ref}) do
-    Notifications.unlisten!(Handoff.Listener, ref)
+  def terminate(_reason, %{pid: pid, ref: ref}) do
+    Notifications.unlisten!(pid, ref)
   end
 end

@@ -7,6 +7,8 @@
 # General application configuration
 import Config
 
+config :we_dle, WeDle.Repo, queue_target: 1_000, queue_interval: 10_000
+
 config :we_dle,
   ecto_repos: [WeDle.Repo],
   runtime_env: config_env()

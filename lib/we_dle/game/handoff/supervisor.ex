@@ -21,9 +21,8 @@ defmodule WeDle.Game.Handoff.Supervisor do
     children = [
       {Registry, keys: :unique, name: Handoff.Registry, partitions: System.schedulers_online()},
       {Task.Supervisor, name: Handoff.TaskSup},
-      Handoff.Orchestrator,
-      Handoff.Pruner,
-      Handoff
+      # Handoff.Orchestrator,
+      Handoff.Pruner
     ]
 
     Supervisor.init(children, strategy: :one_for_one)

@@ -1,5 +1,5 @@
 defmodule WeDle.GameTest do
-  use ExUnit.Case
+  use WeDle.DataCase
   @moduletag :capture_log
   doctest WeDle.Game
 

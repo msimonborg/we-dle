@@ -4,7 +4,24 @@ defmodule WeDle.Handoffs do
   database operations.
   """
 
+  import Ecto.Query
+
   alias WeDle.{Game, Repo, Schemas.Handoff}
+
+  def list_handoffs do
+    Repo.all(Handoff)
+  end
+
+  def delete_stale_handoffs(duration, unit)
+      when is_integer(duration) and duration >= 0 and
+             unit in [:second, :millisecond, :microsecond, :nanosecond] do
+    now = NaiveDateTime.utc_now()
+    cutoff = NaiveDateTime.add(now, -duration, unit)
+
+    query = from h in Handoff, where: h.inserted_at < ^cutoff
+
+    Repo.delete_all(query)
+  end
 
   def create_handoff(%Game{} = game) do
     game
@@ -18,5 +35,9 @@ defmodule WeDle.Handoffs do
 
   def delete_handoff(%Handoff{} = handoff) do
     Repo.delete(handoff)
+  end
+
+  def delete_all_handoffs do
+    Repo.delete_all(Handoff)
   end
 end

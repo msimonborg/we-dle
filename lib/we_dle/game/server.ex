@@ -8,8 +8,14 @@ defmodule WeDle.Game.Server do
 
   require Logger
 
-  alias WeDle.Game
-  alias Game.{Board, DistributedRegistry, Handoff, Player}
+  alias WeDle.{
+    Game,
+    Game.Board,
+    Game.DistributedRegistry,
+    Game.Player,
+    Game.Handoff,
+    Handoffs
+  }
 
   @type on_start :: {:ok, pid} | :ignore | {:error, {ArgumentError, stacktrace :: list}}
 
@@ -57,15 +63,15 @@ defmodule WeDle.Game.Server do
   @impl true
   def handle_continue(:load_game, {game_id, word_length}) do
     game =
-      case Handoff.get(game_id) do
-        %Game{} = game ->
-          unregister_for_handoff(game_id)
-          Handoff.delete(game_id)
-          game
-
-        _ ->
-          Process.send_after(self(), :unregister_for_handoff, 60_000)
+      case Handoffs.get_handoff(game_id) do
+        nil ->
+          Process.send_after(self(), :unregister_for_handoff, 120_000)
           struct!(Game, id: game_id, word_length: word_length)
+
+        handoff ->
+          unregister_for_handoff(game_id)
+          Handoffs.delete_handoff(handoff)
+          Game.game_from_handoff(handoff)
       end
 
     {:noreply, game}
@@ -168,8 +174,7 @@ defmodule WeDle.Game.Server do
   def terminate(:normal, _), do: :ok
 
   def terminate(_, game) do
-    game = %{game | edge_servers: %{}}
-    Handoff.put(game.id, game, :infinity)
+    Handoffs.create_handoff(game)
   end
 
   # -- Private Helpers --

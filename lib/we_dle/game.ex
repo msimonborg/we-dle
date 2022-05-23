@@ -6,6 +6,7 @@ defmodule WeDle.Game do
   require Logger
 
   alias WeDle.Game.{
+    Board,
     DistributedRegistry,
     EdgeServer,
     EdgeSupervisor,
@@ -13,6 +14,8 @@ defmodule WeDle.Game do
     Server,
     ServerSupervisor
   }
+
+  alias WeDle.Schemas.Handoff
 
   defstruct [:id, :word_length, :winner, players: %{}, edge_servers: %{}]
 
@@ -178,6 +181,76 @@ defmodule WeDle.Game do
   """
   def name(game_id) do
     DistributedRegistry.via_tuple(game_id)
+  end
+
+  @doc """
+  Returns a `Game` struct from a `Handoff` struct.
+  """
+  def game_from_handoff(%Handoff{} = handoff) do
+    %__MODULE__{
+      id: handoff.game_id,
+      word_length: handoff.word_length,
+      players: build_players_from_handoff(handoff)
+    }
+  end
+
+  defp build_players_from_handoff(handoff) do
+    %{}
+    |> maybe_add_player1(handoff)
+    |> maybe_add_player2(handoff)
+  end
+
+  defp maybe_add_player1(map, %{player1_id: id} = handoff) when not is_nil(id) do
+    args = %{
+      id: id,
+      game_id: handoff.game_id,
+      rows: handoff.player1_rows,
+      word_length: handoff.word_length,
+      player_challenge: handoff.player1_challenge,
+      opponent_challenge: handoff.player2_challenge
+    }
+
+    build_player(map, args)
+  end
+
+  defp maybe_add_player1(map, _), do: map
+
+  defp maybe_add_player2(map, %{player2_id: id} = handoff) when not is_nil(id) do
+    args = %{
+      id: id,
+      game_id: handoff.game_id,
+      rows: handoff.player2_rows,
+      word_length: handoff.word_length,
+      player_challenge: handoff.player2_challenge,
+      opponent_challenge: handoff.player1_challenge
+    }
+
+    build_player(map, args)
+  end
+
+  defp maybe_add_player2(map, _), do: map
+
+  defp build_player(map, args) do
+    board =
+      if args.opponent_challenge do
+        words = String.split(args.rows, "\n") |> Enum.filter(&(&1 != ""))
+
+        Enum.reduce(words, Board.new(args.word_length), fn word, board ->
+          Board.insert(board, word, args.opponent_challenge)
+        end)
+      else
+        Board.new(args.word_length)
+      end
+
+    Map.merge(map, %{
+      args.id =>
+        Player.new(
+          id: args.id,
+          game_id: args.game_id,
+          board: board,
+          challenge: args.player_challenge
+        )
+    })
   end
 
   # defp game_name(game_id) when is_binary(game_id), do: DistributedRegistry.via_tuple(game_id)

@@ -10,10 +10,10 @@ defmodule WeDle.Application do
     children =
       [
         {Cluster.Supervisor, [topologies(), [name: WeDle.ClusterSupervisor]]},
-        WeDle.Game.Supervisor,
         WeDle.Repo,
         WeDleWeb.Telemetry,
         {Phoenix.PubSub, name: WeDle.PubSub},
+        WeDle.Game.Supervisor,
         WeDleWeb.Endpoint
       ] ++ start_finch_in_prod()
 

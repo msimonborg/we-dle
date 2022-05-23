@@ -48,7 +48,7 @@ defmodule WeDle.Schemas.Handoff do
   end
 
   defp build_handoff_from_game(game) do
-    players = Enum.to_list(game.players)
+    players = Enum.map(game.players, fn {_, player} -> player end)
 
     %{
       game_id: game.id,

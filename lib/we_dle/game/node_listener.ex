@@ -9,10 +9,7 @@ defmodule WeDle.Game.NodeListener do
 
   use GenServer
 
-  alias WeDle.Game.{
-    DistributedRegistry,
-    Handoff
-  }
+  alias WeDle.Game.{DistributedRegistry}
 
   # -- Client API --
 
@@ -29,13 +26,11 @@ defmodule WeDle.Game.NodeListener do
   @impl true
   def handle_info({:nodeup, _node, _node_type}, state) do
     set_members(DistributedRegistry)
-    Handoff.set_neighbors()
     {:noreply, state}
   end
 
   def handle_info({:nodedown, _node, _node_type}, state) do
     set_members(DistributedRegistry)
-    Handoff.set_neighbors()
     {:noreply, state}
   end
 

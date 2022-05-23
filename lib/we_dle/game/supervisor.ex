@@ -39,7 +39,6 @@ defmodule WeDle.Game.Supervisor do
   def init(_init_arg) do
     children = [
       Game.Handoff.Supervisor,
-      {Task, fn -> Game.Handoff.set_neighbors() end},
       Game.DistributedRegistry,
       Game.NodeListener,
       {PartitionSupervisor, child_spec: Game.ServerSupervisor, name: Game.ServerSupervisors},

@@ -3,6 +3,13 @@ defmodule WeDle.GameTest do
   @moduletag :capture_log
   doctest WeDle.Game
 
+  # Wait for doctests to finish to avoid DBConnection errors.
+  # Each game server stores its state in the `terminate` callback
+  # upon receiving a :shutdown signal. The test may exit before
+  # the `terminate` callback finishes executing, causing a DB
+  # connection error.
+  Process.sleep(100)
+
   import WeDle.Game
 
   describe "join/2" do

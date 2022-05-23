@@ -21,7 +21,8 @@ defmodule WeDle.Game.Handoff.Supervisor do
     children = [
       {Registry, keys: :unique, name: Handoff.Registry, partitions: System.schedulers_online()},
       {Task.Supervisor, name: Handoff.TaskSup},
-      # Handoff.Orchestrator,
+      {Postgrex.Notifications, Keyword.merge(WeDle.Repo.config(), name: Handoff.Listener)},
+      Handoff.Worker,
       Handoff.Pruner
     ]
 

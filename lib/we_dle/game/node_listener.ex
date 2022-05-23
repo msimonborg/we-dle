@@ -9,7 +9,7 @@ defmodule WeDle.Game.NodeListener do
 
   use GenServer
 
-  alias WeDle.Game.{DistributedRegistry}
+  alias WeDle.Game.DistributedRegistry
 
   # -- Client API --
 

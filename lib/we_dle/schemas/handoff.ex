@@ -87,9 +87,8 @@ defmodule WeDle.Schemas.Handoff do
   end
 
   defp extract_rows(player) do
-    Enum.map(player.board.rows, fn row ->
-      Enum.map(row, fn {_, char} -> char end) |> Enum.join()
+    Enum.map_join(player.board.rows, "\n", fn row ->
+      Enum.map_join(row, fn {_, char} -> char end)
     end)
-    |> Enum.join("\n")
   end
 end

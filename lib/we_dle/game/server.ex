@@ -12,8 +12,8 @@ defmodule WeDle.Game.Server do
     Game,
     Game.Board,
     Game.DistributedRegistry,
-    Game.Player,
     Game.Handoff,
+    Game.Player,
     Handoffs
   }
 
@@ -50,23 +50,20 @@ defmodule WeDle.Game.Server do
   @impl true
   def init(opts) do
     Process.flag(:trap_exit, true)
+    :timer.send_interval(10_000, :ping)
 
     game_id = Keyword.fetch!(opts, :game_id)
     word_length = Keyword.fetch!(opts, :word_length)
 
+    # Register for handoff before checking the DB, to
+    # avoid a possible race condition with the Handoff.Worker
     register_for_handoff(game_id)
-    :timer.send_interval(10_000, :ping)
 
-    {:ok, {game_id, word_length}, {:continue, :load_game}}
-  end
-
-  @impl true
-  def handle_continue(:load_game, {game_id, word_length}) do
     game =
       case Handoffs.get_handoff(game_id) do
         nil ->
           Process.send_after(self(), :unregister_for_handoff, 120_000)
-          struct!(Game, id: game_id, word_length: word_length)
+          %Game{id: game_id, word_length: word_length}
 
         handoff ->
           unregister_for_handoff(game_id)
@@ -74,7 +71,7 @@ defmodule WeDle.Game.Server do
           Game.game_from_handoff(handoff)
       end
 
-    {:noreply, game}
+    {:ok, game}
   end
 
   @impl true
@@ -101,9 +98,11 @@ defmodule WeDle.Game.Server do
   end
 
   @impl true
-  def handle_info({:handoff, game}, _stale_game) do
-    unregister_for_handoff(game.id)
-    {:noreply, game}
+  def handle_info(:handoff_available, %{id: id} = _stale_game) do
+    handoff = Handoffs.get_handoff(id)
+    Handoffs.delete_handoff(handoff)
+    unregister_for_handoff(id)
+    {:noreply, Game.game_from_handoff(handoff)}
   end
 
   def handle_info(:unregister_for_handoff, game) do

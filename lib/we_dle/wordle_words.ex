@@ -64,15 +64,29 @@ defmodule WeDle.WordleWords do
   def answers_contains?(word), do: contains?(:answers, word)
 
   defp load_words do
-    answers = stream_file_and_map("./words/answers.txt")
+    answers =
+      "answers.txt"
+      |> Path.absname(words_path())
+      |> stream_file_and_map()
 
     allowed =
-      "./words/extras.txt"
+      "extras.txt"
+      |> Path.absname(words_path())
       |> stream_file_and_map()
       |> Map.merge(answers)
 
     :persistent_term.put({__MODULE__, :answers}, answers)
     :persistent_term.put({__MODULE__, :allowed}, allowed)
+  end
+
+  defp words_path do
+    # In production deployments the working directory is app/bin,
+    # and our word files have a different relative path than they
+    # do in our source code
+    case File.cwd!() do
+      "/app/bin" -> "../words"
+      _ -> "./words"
+    end
   end
 
   defp stream_file_and_map(path) do

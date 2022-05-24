@@ -54,6 +54,8 @@ COPY lib lib
 
 COPY assets assets
 
+COPY words words
+
 # compile assets
 RUN mix assets.deploy
 

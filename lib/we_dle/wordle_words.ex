@@ -64,10 +64,10 @@ defmodule WeDle.WordleWords do
   def answers_contains?(word), do: contains?(:answers, word)
 
   defp load_words do
-    answers = stream_file_and_map("./wordle_answers.txt")
+    answers = stream_file_and_map("./words/answers.txt")
 
     allowed =
-      "./wordle_extras.txt"
+      "./words/extras.txt"
       |> stream_file_and_map()
       |> Map.merge(answers)
 

@@ -1,8 +1,11 @@
 defmodule WeDle.Game.Handoff.Pruner do
+  # Prune every ten minutes
+  @pruning_interval 10
+
   @moduledoc """
-  The `WeDle.Game.Handoff.Pruner` keeps all game ids with handoff state
-  in an ETS table, and periodically scans the table for old processes
-  that can be pruned from the handoff map.
+  The `WeDle.Game.Handoff.Pruner` periodically deletes all
+  handoffs in the database that are more than #{@pruning_interval}
+  minute(s) old.
   """
 
   use GenServer
@@ -14,9 +17,6 @@ defmodule WeDle.Game.Handoff.Pruner do
   defstruct node_status: :alive
 
   @type t :: %__MODULE__{node_status: :alive | :shutting_down}
-
-  # Prune every ten minutes
-  @pruning_interval 10
 
   # -- Client API --
 

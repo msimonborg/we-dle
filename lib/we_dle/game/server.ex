@@ -57,8 +57,8 @@ defmodule WeDle.Game.Server do
     game_id = Keyword.fetch!(opts, :game_id)
     word_length = Keyword.fetch!(opts, :word_length)
 
-    # Register for handoff before checking the DB, to
-    # avoid a possible race condition with the Handoff.Worker
+    # Register for handoff before checking the database, to
+    # avoid a possible race condition with the Handoff.Listener
     register_for_handoff(game_id)
 
     game =

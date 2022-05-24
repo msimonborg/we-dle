@@ -13,6 +13,7 @@ defmodule WeDle.Application do
         WeDle.Repo,
         WeDleWeb.Telemetry,
         {Phoenix.PubSub, name: WeDle.PubSub},
+        WeDle.WordleWords,
         WeDle.Game.Supervisor,
         WeDleWeb.Endpoint
       ] ++ start_finch_in_prod()

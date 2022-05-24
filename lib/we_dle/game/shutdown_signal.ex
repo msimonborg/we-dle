@@ -6,29 +6,29 @@ defmodule WeDle.Game.ShutdownSignal do
 
   use GenServer
 
-  alias WeDle.Game.Handoff
+  defstruct subscribers: []
 
   # -- Client API --
 
-  def start_link(init_arg) do
-    GenServer.start_link(__MODULE__, init_arg)
+  def start_link(opts) do
+    GenServer.start_link(__MODULE__, opts)
   end
 
   # -- Callbacks --
 
   @impl true
-  def init(_init_arg) do
+  def init(opts) do
     Process.flag(:trap_exit, true)
-    {:ok, []}
+    {:ok, struct!(__MODULE__, Keyword.put_new(opts, :subscribers, []))}
   end
 
   @impl true
-  def terminate(:shutdown, _state), do: signal_shutdown()
-  def terminate({:shutdown, _}, _state), do: signal_shutdown()
+  def terminate(:shutdown, state), do: signal_shutdown(state)
+  def terminate({:shutdown, _}, state), do: signal_shutdown(state)
   def terminate(_, _), do: :ok
 
-  defp signal_shutdown do
-    GenServer.cast(Handoff.Worker, :shutting_down)
-    GenServer.cast(Handoff.Pruner, :shutting_down)
+  defp signal_shutdown(%{subscribers: subscribers}) do
+    for subscriber <- subscribers, do: send(subscriber, :shutting_down)
+    :ok
   end
 end

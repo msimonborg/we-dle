@@ -23,19 +23,19 @@ defmodule WeDle.Game.Handoff.Listener do
   require Logger
 
   alias Postgrex.Notifications
-  alias WeDle.{Game.Handoff, Repo}
+  alias WeDle.Game.Handoff
 
-  defstruct [:ref, :pid, handoffs: [], counter: 0, node_status: :alive]
+  defstruct [:notifier_ref, handoffs: [], counter: 0, node_status: :alive]
 
   @type t :: %__MODULE__{
-          ref: reference,
-          pid: pid,
+          notifier_ref: reference,
           counter: non_neg_integer,
           handoffs: [String.t()],
           node_status: :alive | :shutting_down
         }
 
   @channel "handoff_inserted"
+  @notifier Handoff.Notifier
 
   # -- Client API --
 
@@ -47,30 +47,41 @@ defmodule WeDle.Game.Handoff.Listener do
 
   @impl true
   def init(_init_arg) do
-    Process.flag(:trap_exit, true)
-    {:ok, pid} = Notifications.start_link(Repo.config())
-    ref = Notifications.listen!(pid, @channel)
-    {:ok, %__MODULE__{ref: ref, pid: pid}}
+    {:ok, %__MODULE__{}, {:continue, :start_listening}}
+  end
+
+  @impl true
+  def handle_continue(:start_listening, state) do
+    Process.monitor(@notifier)
+    {_, ref} = Notifications.listen(@notifier, @channel)
+    {:noreply, %{state | notifier_ref: ref}}
   end
 
   @impl true
   def handle_info(_, %{node_status: :shutting_down} = state), do: {:noreply, state}
+  def handle_info(:shutting_down, state), do: {:noreply, %{state | node_status: :shutting_down}}
+  def handle_info(:timeout, state), do: {:noreply, process_handoffs(state)}
 
   def handle_info(msg, %{counter: counter} = state) when counter >= 100 do
-    process_handoffs(state.handoffs)
-    handle_info(msg, %{state | handoffs: [], counter: 0})
+    handle_info(msg, process_handoffs(state))
   end
 
-  def handle_info({:notification, pid, ref, @channel, payload}, %{pid: pid, ref: ref} = state) do
+  def handle_info({:notification, _, ref, @channel, payload}, %{notifier_ref: ref} = state) do
     {:noreply, %{state | handoffs: [payload | state.handoffs], counter: state.counter + 1}, 5}
   end
 
-  def handle_info(:timeout, state) do
-    process_handoffs(state.handoffs)
-    {:noreply, %{state | handoffs: [], counter: 0}}
+  def handle_info({:DOWN, ref, _, _, reason}, %{notifier_ref: ref} = state) do
+    Process.demonitor(ref, [:flush])
+
+    Logger.error(
+      "#{@notifier} down with reason #{reason}",
+      label: "#{__MODULE__} exiting"
+    )
+
+    {:stop, reason, %{state | notifier_ref: nil}}
   end
 
-  defp process_handoffs(handoffs) do
+  defp process_handoffs(%{handoffs: handoffs} = state) do
     stream =
       Task.Supervisor.async_stream_nolink(
         Handoff.TaskSup,
@@ -83,25 +94,14 @@ defmodule WeDle.Game.Handoff.Listener do
       )
 
     Task.Supervisor.start_child(Handoff.TaskSup, Enum, :to_list, [stream])
+
+    %{state | handoffs: [], counter: 0}
   end
 
   defp forward_if_game_is_local(handoff) do
     case Registry.lookup(Handoff.Registry, handoff) do
-      [{pid, _}] ->
-        send(pid, :handoff_available)
-
-      [] ->
-        :ok
+      [{pid, _}] -> send(pid, :handoff_available)
+      [] -> :ok
     end
-  end
-
-  @impl true
-  def handle_cast(:shutting_down, state) do
-    {:noreply, %{state | node_status: :shutting_down}}
-  end
-
-  @impl true
-  def terminate(_reason, %{pid: pid, ref: ref}) do
-    Notifications.unlisten!(pid, ref)
   end
 end

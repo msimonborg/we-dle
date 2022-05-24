@@ -16,6 +16,36 @@ defmodule WeDle.WordleWords do
 
 
   The cache warming task is run automatically at application startup.
+
+  ## Why use `:persistent_term`?
+
+  The goal is a fast and performant cache of the official Wordle words,
+  avoiding unnecessary transactions with the database or HTTP requests
+  for the data.
+
+  Currently we're using `:persistent_term` to store two data structures
+  that contain the lists of valid answers and possible guesses.
+  `:persistent_term` makes these data structures accessible concurrently
+  by any local process in constant near-zero time, and is optimized for
+  data that rarely or never changes.
+
+  The downside to this approach is I see it is the requirement to copy
+  the word files to the final release image in production so they can
+  be loaded at runtime, adding to the number and size of build artifacts.
+
+  At least one other approach might be to load the data at compile
+  time and dynamically store it in code. This would allow us to use the
+  files only while building the release and exclude them from the final
+  image.
+
+  My thinking, which may likely be wrong, is that while this approach
+  would cut down slightly on the image size, it would require the entire data
+  structure to be copied to the heap of any process that uses it. At scale
+  this could potentially be thousands of concurrent processes representing
+  individual users.
+
+  Using `:persistent_term` allows access to the data as a shared reference
+  and adds nothing to the heap of a process that needs access to the data.
   """
 
   use Task, restart: :transient

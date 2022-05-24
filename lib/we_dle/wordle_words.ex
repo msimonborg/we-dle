@@ -29,7 +29,7 @@ defmodule WeDle.WordleWords do
   by any local process in constant near-zero time, and is optimized for
   data that rarely or never changes.
 
-  The downside to this approach is I see it is the requirement to copy
+  The downside to this approach as I see it is the requirement to copy
   the word files to the final release image in production so they can
   be loaded at runtime, adding to the number and size of build artifacts.
 

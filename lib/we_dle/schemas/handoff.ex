@@ -35,8 +35,9 @@ defmodule WeDle.Schemas.Handoff do
 
   @doc """
   Receives a `WeDle.Game` struct and returns an `Ecto.Changeset`
-  for the handoff schema.
+  for the `WeDle.Schemas.Handoff` schema.
   """
+  @spec changeset_from_game(Game.t()) :: Ecto.Changeset.t()
   def changeset_from_game(%Game{} = game) do
     handoff = build_handoff_from_game(game)
 
@@ -88,7 +89,7 @@ defmodule WeDle.Schemas.Handoff do
 
   defp extract_rows(player) do
     Enum.map_join(player.board.rows, "\n", fn row ->
-      Enum.map_join(row, fn {_, char} -> char end)
+      Enum.map_join(row, fn {_, grapheme} -> grapheme end)
     end)
   end
 end

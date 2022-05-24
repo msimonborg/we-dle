@@ -12,10 +12,12 @@ defmodule WeDle.Game.Server do
     Game,
     Game.Board,
     Game.DistributedRegistry,
-    Game.Handoff,
     Game.Player,
-    Handoffs
+    Handoffs,
+    Schemas.Handoff
   }
+
+  alias WeDle.Game.Handoff.Registry, as: HandoffRegistry
 
   @type on_start :: {:ok, pid} | :ignore | {:error, {ArgumentError, stacktrace :: list}}
 
@@ -67,7 +69,7 @@ defmodule WeDle.Game.Server do
 
         handoff ->
           unregister_for_handoff(game_id)
-          Handoffs.delete_handoff(handoff)
+          Handoffs.delete_handoff!(handoff)
           Game.game_from_handoff(handoff)
       end
 
@@ -100,7 +102,7 @@ defmodule WeDle.Game.Server do
   @impl true
   def handle_info(:handoff_available, %{id: id} = _stale_game) do
     handoff = Handoffs.get_handoff(id)
-    Handoffs.delete_handoff(handoff)
+    Handoffs.delete_handoff!(handoff)
     unregister_for_handoff(id)
     {:noreply, Game.game_from_handoff(handoff)}
   end
@@ -173,7 +175,21 @@ defmodule WeDle.Game.Server do
   def terminate(:normal, _), do: :ok
 
   def terminate(_, game) do
-    Handoffs.create_handoff(game)
+    case Handoffs.create_handoff(game) do
+      {:ok, %Handoff{}} ->
+        Logger.debug("handoff created for game with ID: \"#{game.id}\"")
+
+      {:error, changeset} ->
+        errors = for {field, {msg, _}} <- changeset.errors, do: "#{field} #{msg}"
+
+        Logger.warn("""
+        creating handoff for game(ID: "#{game.id}") failed with errors: #{inspect(errors)}
+        attempting to delete old handoff and try once more to create a new one
+        """)
+
+        Handoffs.delete_handoff_if_exists(game.id)
+        Handoffs.create_handoff(game)
+    end
   end
 
   # -- Private Helpers --
@@ -203,11 +219,11 @@ defmodule WeDle.Game.Server do
   end
 
   defp register_for_handoff(game_id) do
-    Registry.register(Handoff.Registry, game_id, [])
+    Registry.register(HandoffRegistry, game_id, [])
   end
 
   defp unregister_for_handoff(game_id) do
-    Registry.unregister(Handoff.Registry, game_id)
+    Registry.unregister(HandoffRegistry, game_id)
   end
 
   defp get_player(%{players: players} = game, player_id) do

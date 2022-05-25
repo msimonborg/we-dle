@@ -52,7 +52,7 @@ defmodule WeDle.Game.Server do
   @impl true
   def init(opts) do
     Process.flag(:trap_exit, true)
-    :timer.send_interval(10_000, :ping)
+    :timer.send_interval(60_000, :ping_edge_servers)
 
     game_id = Keyword.fetch!(opts, :game_id)
     word_length = Keyword.fetch!(opts, :word_length)
@@ -117,7 +117,7 @@ defmodule WeDle.Game.Server do
     {:noreply, %{game | players: Map.put(players, player.id, player)}}
   end
 
-  def handle_info(:ping, %{edge_servers: edge_servers} = game) do
+  def handle_info(:ping_edge_servers, %{edge_servers: edge_servers} = game) do
     Enum.each(edge_servers, fn {id, edge} ->
       send(edge.pid, {:ping, self(), id, :erlang.monotonic_time(:millisecond)})
     end)
@@ -195,13 +195,21 @@ defmodule WeDle.Game.Server do
   # -- Private Helpers --
 
   defp do_join_game(game, player_id, player, opponent, pid) do
-    if edge = Map.get(game.edge_servers, player_id), do: Process.demonitor(edge.ref, [:flush])
+    edge = Map.get(game.edge_servers, player_id)
+
+    if edge && edge.pid != pid do
+      Process.demonitor(edge.ref, [:flush])
+      Process.exit(edge.pid, :shutdown)
+    end
+
     ref = Process.monitor(pid)
     new_edge = %{ref: ref, pid: pid, pings: 0, avg_latency: 0}
 
     edge_servers = Map.put(game.edge_servers, player_id, new_edge)
     players = Map.put_new(game.players, player_id, player)
     game = %{game | edge_servers: edge_servers, players: players}
+
+    send(self(), :ping_edge_servers)
 
     reply = %{player: player, opponent: opponent}
     {:reply, {:ok, reply}, game}

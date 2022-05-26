@@ -61,19 +61,26 @@ defmodule WeDle.Game.Server do
     # avoid a possible race condition with the Handoff.Listener
     register_for_handoff(game_id)
 
+    {:ok, %Game{id: game_id, word_length: word_length}, {:continue, :load_game}}
+  end
+
+  @impl true
+  def handle_continue(:load_game, %{id: id} = game) do
     game =
-      case Handoffs.get_handoff(game_id) do
+      case Handoffs.get_handoff(id) do
         nil ->
           Process.send_after(self(), :unregister_for_handoff, 120_000)
-          %Game{id: game_id, word_length: word_length}
+          game
 
         handoff ->
-          unregister_for_handoff(game_id)
-          Handoffs.delete_handoff!(handoff)
-          Game.game_from_handoff(handoff)
+          unregister_for_handoff(id)
+
+          handoff
+          |> Handoffs.delete_handoff!()
+          |> Game.game_from_handoff()
       end
 
-    {:ok, game}
+    {:noreply, game}
   end
 
   @impl true
@@ -101,10 +108,13 @@ defmodule WeDle.Game.Server do
 
   @impl true
   def handle_info(:handoff_available, %{id: id} = _stale_game) do
-    handoff = Handoffs.get_handoff(id)
-    Handoffs.delete_handoff!(handoff)
     unregister_for_handoff(id)
-    {:noreply, Game.game_from_handoff(handoff)}
+
+    {:noreply,
+     id
+     |> Handoffs.get_handoff()
+     |> Handoffs.delete_handoff!()
+     |> Game.game_from_handoff()}
   end
 
   def handle_info(:unregister_for_handoff, game) do

@@ -3,14 +3,15 @@ defmodule WeDle.Game.HandoffTest do
 
   import WeDle.Game
 
-  alias WeDle.{Game, Game.Board, Game.Player, Handoffs}
+  alias Ecto.Adapters.SQL.Sandbox
+  alias WeDle.{Game, Game.Board, Game.Player, Handoffs, Repo}
 
   setup do
-    pid = Ecto.Adapters.SQL.Sandbox.start_owner!(WeDle.Repo, shared: true, sandbox: false)
+    pid = Sandbox.start_owner!(Repo, shared: true, sandbox: false)
 
     on_exit(fn ->
-      WeDle.Handoffs.delete_all_handoffs()
-      Ecto.Adapters.SQL.Sandbox.stop_owner(pid)
+      Handoffs.delete_all_handoffs()
+      Sandbox.stop_owner(pid)
     end)
 
     :ok

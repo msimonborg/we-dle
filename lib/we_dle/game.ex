@@ -50,10 +50,12 @@ defmodule WeDle.Game do
   ## Examples
 
       iex> {:ok, pid} = WeDle.Game.start("game")
+      iex> WeDle.Game.join("game", "p1")
       iex> is_pid(pid)
       true
 
       iex> {:ok, _pid} = WeDle.Game.start("other_game")
+      iex> WeDle.Game.join("other_game", "p1")
       iex> WeDle.Game.start("other_game")
       :ignore
   """

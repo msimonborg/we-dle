@@ -12,6 +12,7 @@ defmodule WeDle.Schemas.Handoff do
   schema "handoffs" do
     field :game_id, :string
     field :word_length, :integer
+    field :started_at, :utc_datetime_usec
     field :player1_id, :string
     field :player1_challenge, :string
     field :player1_rows, :string
@@ -25,6 +26,7 @@ defmodule WeDle.Schemas.Handoff do
   @fields [
     :game_id,
     :word_length,
+    :started_at,
     :player1_id,
     :player1_challenge,
     :player1_rows,
@@ -43,9 +45,43 @@ defmodule WeDle.Schemas.Handoff do
 
     %__MODULE__{}
     |> cast(handoff, @fields)
-    |> validate_required([:game_id, :word_length])
+    |> validate_required([:game_id, :word_length, :started_at])
     |> unsafe_validate_unique([:game_id], Repo)
     |> validate_inclusion(:word_length, 3..10)
+    |> validate_change(:started_at, &validate_not_expired/2)
+  end
+
+  @doc """
+  Returns the expiration time before a handoff is invalid.
+
+  The return value is a positive integer representing the
+  valid duration of a Handoff in the given `unit`. Unit must
+  be one of `:second | :millisecond | :microsecond | :nanosecond`.
+
+  Handoffs expire after 86400 seconds, i.e. twenty-four hours.
+
+  ## Examples
+
+      iex> WeDle.Schemas.Handoff.expiration_time(:second)
+      86_400
+
+      iex> WeDle.Schemas.Handoff.expiration_time(:millisecond)
+      86_400_000
+  """
+  @spec expiration_time(:second | :millisecond | :microsecond | :nanosecond) :: pos_integer
+  def expiration_time(:second), do: 24 * 60 * 60
+  def expiration_time(:millisecond), do: expiration_time(:second) * 1000
+  def expiration_time(:microsecond), do: expiration_time(:millisecond) * 1000
+  def expiration_time(:nanosecond), do: expiration_time(:microsecond) * 1000
+
+  defp validate_not_expired(:started_at, started_at) do
+    diff = DateTime.diff(DateTime.utc_now(), started_at, :second)
+
+    if diff >= expiration_time(:second) do
+      [started_at: "can't be over twenty-four hours old"]
+    else
+      []
+    end
   end
 
   defp build_handoff_from_game(game) do
@@ -53,7 +89,8 @@ defmodule WeDle.Schemas.Handoff do
 
     %{
       game_id: game.id,
-      word_length: game.word_length
+      word_length: game.word_length,
+      started_at: game.started_at
     }
     |> maybe_add_players(players)
   end

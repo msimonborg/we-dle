@@ -77,6 +77,31 @@ defmodule WeDle.Game.EdgeServer do
     {:via, Registry, {EdgeRegistry, "#{player_id}@#{game_id}"}}
   end
 
+  @doc """
+  Returns the `pid` of the edge server for the given `player`.
+
+  Returns `nil` if a process can't be found.
+  """
+  @spec whereis(player) :: pid | nil
+  def whereis(%Player{} = player) do
+    player
+    |> name()
+    |> GenServer.whereis()
+  end
+
+  @doc """
+  Returns the `pid` of the edge server for the given `game_id`
+  and `player_id`.
+
+  Returns `nil` if a process can't be found.
+  """
+  @spec whereis(String.t(), String.t()) :: pid | nil
+  def whereis(game_id, player_id) do
+    game_id
+    |> name(player_id)
+    |> GenServer.whereis()
+  end
+
   def join_game(pid, game_id, player_id) do
     game_id
     |> name(player_id)
@@ -105,14 +130,11 @@ defmodule WeDle.Game.EdgeServer do
   end
 
   @impl true
-  def handle_call({:join_game, game_pid}, {client_pid, _} = from, %{client_pid: nil} = state) do
-    handle_call({:join_game, game_pid}, from, %{state | client_pid: client_pid})
-  end
-
-  def handle_call({:join_game, game_pid}, _, %{player_id: player_id} = state) do
+  def handle_call({:join_game, game_pid}, {client_pid, _}, %{player_id: player_id} = state) do
     case GenServer.call(game_pid, {:join_game, player_id}) do
       {:ok, %{player: player, opponent: opponent}} ->
-        {:reply, {:ok, player}, %{state | player: player, opponent: opponent}}
+        state = %{state | player: player, opponent: opponent, client_pid: client_pid}
+        {:reply, {:ok, player}, state}
 
       {:error, _} = error ->
         {:stop, :normal, error, state}

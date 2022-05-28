@@ -61,7 +61,9 @@ defmodule WeDle.Game.Server do
     # avoid a possible race condition with the Handoff.Listener
     register_for_handoff(game_id)
 
-    {:ok, %Game{id: game_id, word_length: word_length}, {:continue, :load_game}}
+    game = %Game{id: game_id, word_length: word_length, started_at: DateTime.utc_now()}
+
+    {:ok, game, {:continue, :load_game}}
   end
 
   @impl true
@@ -80,7 +82,7 @@ defmodule WeDle.Game.Server do
           |> Game.game_from_handoff()
       end
 
-    {:noreply, game}
+    {:noreply, set_expiration(game)}
   end
 
   @impl true
@@ -107,6 +109,11 @@ defmodule WeDle.Game.Server do
   end
 
   @impl true
+  def handle_info(:expire, game) do
+    Logger.debug("game with ID: \"#{game.id}\" expiring")
+    {:stop, :normal, game}
+  end
+
   def handle_info(:handoff_available, %{id: id} = _stale_game) do
     unregister_for_handoff(id)
 
@@ -114,7 +121,8 @@ defmodule WeDle.Game.Server do
      id
      |> Handoffs.get_handoff()
      |> Handoffs.delete_handoff!()
-     |> Game.game_from_handoff()}
+     |> Game.game_from_handoff()
+     |> set_expiration()}
   end
 
   def handle_info(:unregister_for_handoff, game) do
@@ -182,12 +190,13 @@ defmodule WeDle.Game.Server do
   end
 
   @impl true
-  def terminate(:normal, _), do: :ok
-
   def terminate(_, game) do
     case Handoffs.create_handoff(game) do
       {:ok, %Handoff{}} ->
         Logger.debug("handoff created for game with ID: \"#{game.id}\"")
+
+      {:error, %{errors: [started_at: {"cannot be over twenty-four hours old", _}]}} ->
+        Logger.debug("no handoff was created for expired game with ID \"#{game.id}\"")
 
       {:error, changeset} ->
         errors = for {field, {msg, _}} <- changeset.errors, do: "#{field} #{msg}"
@@ -203,6 +212,18 @@ defmodule WeDle.Game.Server do
   end
 
   # -- Private Helpers --
+
+  defp set_expiration(game) do
+    expiration_time = expiration_time(game)
+
+    if expiration_time > 0, do: Process.send_after(self(), :expire, expiration_time)
+    game
+  end
+
+  defp expiration_time(game) do
+    start_diff = DateTime.diff(DateTime.utc_now(), game.started_at, :millisecond)
+    Handoff.expiration_time(:millisecond) - start_diff
+  end
 
   defp do_join_game(game, player_id, player, opponent, pid) do
     edge = Map.get(game.edge_servers, player_id)

@@ -7,9 +7,16 @@ defmodule WeDle.Game.HandoffTest do
   alias WeDle.{Game, Game.Board, Game.Player, Handoffs, Repo}
 
   setup do
+    # Our Postgres notification doesn't trigger inside of a sandbox,
+    # i.e. without a committed insert, so we must set `:sandbox` to
+    # `false`. Also, our notification is triggered with an insertion
+    # by another process (the `WeDle.Game.Server`), so we must share
+    # the connection with other processes by setting `shared: true`.
     pid = Sandbox.start_owner!(Repo, shared: true, sandbox: false)
 
     on_exit(fn ->
+      # Since we're outside of the sandbox there will be no rollback
+      # after the test, so we must manually delete all handoffs.
       Handoffs.delete_all_handoffs()
       Sandbox.stop_owner(pid)
     end)
@@ -36,10 +43,13 @@ defmodule WeDle.Game.HandoffTest do
 
       assert whereis(game) |> is_nil()
 
+      # The state is restored
       assert {:ok, %Player{challenge: "hello"}} = start_or_join(game, "p1")
       assert {:ok, %Player{challenge: "world"}} = start_or_join(game, "p2")
 
       assert whereis(game) |> is_pid()
+
+      # The handoff has been deleted after it was used
       assert Handoffs.get_handoff(game) |> is_nil()
     end
 
@@ -85,10 +95,12 @@ defmodule WeDle.Game.HandoffTest do
       # Wait for handoff to be delivered
       Process.sleep(50)
 
+      # The game has updated it's state from the handoff
       assert {:ok, %Player{challenge: "hello"}} = start_or_join(game, "p1")
       assert {:ok, %Player{challenge: "world"}} = start_or_join(game, "p2")
 
-      game |> whereis() |> Process.exit(:normal)
+      # The handoff has been deleted after it was used
+      assert Handoffs.get_handoff(game) |> is_nil()
     end
 
     test "game does not handoff state when exit reason is normal" do
@@ -109,6 +121,7 @@ defmodule WeDle.Game.HandoffTest do
 
       assert whereis(game) |> is_nil()
 
+      # The game is started over again and the handoff state was not saved
       assert {:ok, %Player{challenge: nil}} = start_or_join(game, "p1")
       assert {:ok, %Player{challenge: nil}} = start_or_join(game, "p2")
     end

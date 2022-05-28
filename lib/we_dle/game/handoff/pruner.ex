@@ -1,22 +1,21 @@
 defmodule WeDle.Game.Handoff.Pruner do
-  # Prune every ten minutes
-  @pruning_interval 10
-
   @moduledoc """
   The `WeDle.Game.Handoff.Pruner` periodically deletes all
-  handoffs in the database that are more than #{@pruning_interval}
-  minute(s) old.
+  handoffs in the database.
   """
 
   use GenServer
 
   require Logger
 
-  alias WeDle.Handoffs
+  alias WeDle.{Handoffs, Schemas.Handoff}
 
   defstruct node_status: :alive
 
   @type t :: %__MODULE__{node_status: :alive | :shutting_down}
+
+  # Prune every five minutes
+  @pruning_interval 5
 
   # -- Client API --
 
@@ -28,8 +27,6 @@ defmodule WeDle.Game.Handoff.Pruner do
 
   @impl true
   def init(_init_arg) do
-    send(self(), :prune)
-
     @pruning_interval
     |> to_millisecond()
     |> :timer.send_interval(:prune)
@@ -38,15 +35,15 @@ defmodule WeDle.Game.Handoff.Pruner do
   end
 
   @impl true
-  def handle_info(:prune, %{node_status: :shutting_down} = state), do: {:noreply, state}
   def handle_info(:shutting_down, state), do: {:noreply, %{state | node_status: :shutting_down}}
+  def handle_info(:prune, %{node_status: :shutting_down} = state), do: {:noreply, state}
 
   def handle_info(:prune, state) do
-    Logger.info("#{__MODULE__} deleting handoffs older than #{@pruning_interval} minute(s)")
+    Logger.info("#{__MODULE__} deleting handoffs older than 24 hours")
 
-    @pruning_interval
-    |> to_millisecond()
-    |> Handoffs.delete_handoffs_older_than(:millisecond)
+    :second
+    |> Handoff.expiration_time()
+    |> Handoffs.delete_handoffs_older_than(:second)
 
     {:noreply, state}
   end

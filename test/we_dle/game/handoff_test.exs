@@ -4,7 +4,7 @@ defmodule WeDle.Game.HandoffTest do
   import WeDle.Game
 
   alias Ecto.Adapters.SQL.Sandbox
-  alias WeDle.{Game, Game.Board, Game.Player, Handoffs, Repo}
+  alias WeDle.{Game, Game.Board, Game.Player, Handoffs, Repo, Schemas.Handoff}
 
   setup do
     # Our Postgres notification doesn't trigger inside of a sandbox,
@@ -59,7 +59,48 @@ defmodule WeDle.Game.HandoffTest do
       {:ok, %Player{challenge: nil}} = start_or_join(game, "p1")
       {:ok, %Player{challenge: nil}} = start_or_join(game, "p2")
 
-      handoff_state = %Game{
+      handoff_state = build_state(game: game)
+
+      Handoffs.create_handoff(handoff_state)
+
+      # Wait for handoff to be delivered
+      Process.sleep(50)
+
+      # The game has updated it's state from the handoff
+      assert {:ok, %Player{challenge: "hello"}} = start_or_join(game, "p1")
+      assert {:ok, %Player{challenge: "world"}} = start_or_join(game, "p2")
+
+      # The handoff has been deleted after it was used
+      assert Handoffs.get_handoff(game) |> is_nil()
+    end
+
+    test "a game will not receive a handoff if the state is too old" do
+      game = "handoff3"
+
+      {:ok, %Player{challenge: nil}} = start_or_join(game, "p1")
+      {:ok, %Player{challenge: nil}} = start_or_join(game, "p2")
+
+      expiration_time = Handoff.expiration_time(:second)
+      old_time = DateTime.add(DateTime.utc_now(), -(expiration_time + 1), :second)
+
+      handoff_state = build_state(game: game, started_at: old_time)
+
+      assert {:error, _} = Handoffs.create_handoff(handoff_state)
+      assert Handoffs.get_handoff(game) |> is_nil()
+
+      # Wait for handoff to be delivered
+      Process.sleep(50)
+
+      # The game has not updated its state
+      assert {:ok, %Player{challenge: nil}} = start_or_join(game, "p1")
+      assert {:ok, %Player{challenge: nil}} = start_or_join(game, "p2")
+    end
+
+    defp build_state(opts) do
+      game = Keyword.fetch!(opts, :game)
+      started_at = Keyword.get(opts, :started_at, DateTime.utc_now())
+
+      %Game{
         edge_servers: %{},
         id: game,
         players: %{
@@ -88,43 +129,8 @@ defmodule WeDle.Game.HandoffTest do
         },
         winner: nil,
         word_length: 5,
-        started_at: DateTime.utc_now()
+        started_at: started_at
       }
-
-      Handoffs.create_handoff(handoff_state)
-
-      # Wait for handoff to be delivered
-      Process.sleep(50)
-
-      # The game has updated it's state from the handoff
-      assert {:ok, %Player{challenge: "hello"}} = start_or_join(game, "p1")
-      assert {:ok, %Player{challenge: "world"}} = start_or_join(game, "p2")
-
-      # The handoff has been deleted after it was used
-      assert Handoffs.get_handoff(game) |> is_nil()
-    end
-
-    test "game does not handoff state when exit reason is normal" do
-      game = "handoff3"
-
-      {:ok, %Player{challenge: nil}} = start_or_join(game, "p1")
-      {:ok, %Player{challenge: nil}} = start_or_join(game, "p2")
-
-      {:ok, %Player{challenge: "hello"}} = set_challenge(game, "p1", "hello")
-      {:ok, %Player{challenge: "world"}} = set_challenge(game, "p2", "world")
-
-      game_pid = whereis(game)
-      assert is_pid(game_pid)
-
-      Process.exit(game_pid, :normal)
-
-      Process.sleep(10)
-
-      assert whereis(game) |> is_nil()
-
-      # The game is started over again and the handoff state was not saved
-      assert {:ok, %Player{challenge: nil}} = start_or_join(game, "p1")
-      assert {:ok, %Player{challenge: nil}} = start_or_join(game, "p2")
     end
   end
 end

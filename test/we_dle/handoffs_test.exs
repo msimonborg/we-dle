@@ -34,7 +34,7 @@ defmodule WeDle.HandoffsTest do
       assert {:error, changeset} = create_handoff(%Game{id: game.id, word_length: 5})
       assert {"has already been taken", _} = changeset.errors[:game_id]
 
-      expiration_time = WeDle.Schemas.Handoff.expiration_time(:second)
+      expiration_time = Handoff.expiration_time(:second)
       old_time = DateTime.add(DateTime.utc_now(), -(expiration_time + 1), :second)
       assert {:error, changeset} = create_handoff(%{game | started_at: old_time})
       assert {"can't be over twenty-four hours old", _} = changeset.errors[:started_at]

@@ -193,6 +193,7 @@ defmodule WeDle.Game do
     %__MODULE__{
       id: handoff.game_id,
       word_length: handoff.word_length,
+      started_at: handoff.started_at,
       players: build_players_from_handoff(handoff)
     }
   end

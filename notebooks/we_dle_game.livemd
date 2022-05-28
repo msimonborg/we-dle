@@ -6,10 +6,25 @@ To start a new game, it is recommended that you call `start_or_join/3` to start 
 
 ```elixir
 alias WeDle.Game
-Game.start_or_join("game", "p1", word_length: 6)
+game = "game"
+{:ok, player} = Game.start_or_join(game, "p1", word_length: 6)
 ```
 
-If you attempt to join the game again with the same player you will get an error.
+Not only is a `WeDle.Game.Server` started, so is a `WeDle.Game.EdgeServer`. Each client (player) is connected directly with their very own `WeDle.Game.EdgeServer`, which connects to the `WeDle.Game.Server`. The `WeDle.Game.Server` holds the game state and can be stopped and restarted anywhere on the cluster without losing its state. A game and its state can only last for 24 hours before they are stopped.
+
+```elixir
+Game.whereis(game)
+```
+
+```elixir
+Game.EdgeServer.whereis(player)
+```
+
+```elixir
+Game.EdgeServer.whereis(game, player.id) == Game.EdgeServer.whereis(player)
+```
+
+If you attempt to join the game again with the same player it will succeed.
 
 ```elixir
 Game.start_or_join("game", "p1", word_length: 6)
@@ -21,7 +36,7 @@ A second player can also join the game by calling `start_or_join/3`.
 Game.start_or_join("game", "p2")
 ```
 
-Now with two players the game is full, and any subsequent attempts to join will return an error.
+Now with two players the game is full, and any subsequent attempts by new players to join will return an error.
 
 ```elixir
 Game.start_or_join("game", "p3")
@@ -30,7 +45,7 @@ Game.start_or_join("game", "p3")
 You can also call `start/2` and `join/2` separately if you need to, but you will have to remember to join the game after you start it.
 
 ```elixir
-{:ok, pid} = Game.start("new_game", word_length: 4)
+{:ok, _pid} = Game.start("new_game", word_length: 4)
 Game.join("new_game", "p4")
 ```
 
@@ -42,18 +57,32 @@ To set a player's challenge word for the other player, call `set_challenge/3`.
 Game.set_challenge("game", "p1", "whisky")
 ```
 
-The player must have already joined the game, or else the function will return an error.
+The player must have already joined the game, or else the function will exit the calling process. TODO: Raise an exception with nicer reporting.
 
 ```elixir
 Game.set_challenge("game", "p5", "whisky")
 ```
 
-The function will also return an error if a challenge word is already set for the player.
+The function will return an `{:error, reason}` tuple if a challenge word is already set for the player.
 
 ```elixir
 Game.set_challenge("game", "p1", "scotch")
 ```
 
+## submit_word/3
+
+Now that the challenges are set, players can submit words for evaluation as guesses. The word is compared to the challenge and a new row is inserted into the board (as long as the number of turns is below 6). Each letter is tagged with a number `0 | 1 | 2`. `0` means the letter is in the correct spot. `1` means the letter is present in the word but it is in the wrong place. `2` means the letter is absent from the word.
+
 ```elixir
 Game.submit_word("game", "p2", "scotch")
+```
+
+```elixir
+Game.submit_word("game", "p2", "whiney")
+```
+
+If the guess is correct then the `:solved` field on the `WeDle.Game.Board` struct will be set to `true`.
+
+```elixir
+Game.submit_word("game", "p2", "whisky")
 ```

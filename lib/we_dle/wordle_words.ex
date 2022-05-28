@@ -110,11 +110,12 @@ defmodule WeDle.WordleWords do
   """
   @spec todays_answer :: word
   def todays_answer do
-    diff = Date.diff(Date.utc_today(), @start_date)
+    answers = :persistent_term.get({__MODULE__, :answers})
 
-    {__MODULE__, :answers}
-    |> :persistent_term.get()
-    |> Map.get(diff)
+    diff = Date.diff(Date.utc_today(), @start_date)
+    index = rem(diff, map_size(answers))
+
+    Map.get(answers, index)
   end
 
   defp load_words do

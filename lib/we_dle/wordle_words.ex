@@ -1,18 +1,20 @@
 defmodule WeDle.WordleWords do
   @moduledoc """
-  Provides a task to load the official Wordle word lists into
+  Provides a task to load the official Wordle word collections into
   a performant in-memory cache (using `:persistent_term`), and
-  helper functions to access the cache and validate a word's
-  inclusion in the lists.
+  helper functions to access the cache and validate a word against
+  the collections.
 
   ## Word lists
 
-    * `:allowed` - The list of all possible words considered valid
-    guesses as provided by the Wordle source code
+    * `:allowed` - The collection of all possible words considered valid
+    guesses as provided by the Wordle source code. This collection
+    is a map in the shape `%{word => true, ...}`.
 
-    * `:answers` - The list of all possible Wordle answers as provided
-    by the Wordle source code. `:answers` is a
-    subset of `:allowed`.
+    * `:answers` - The collection of all possible Wordle answers as
+    provided by the Wordle source code. `:answers` is a subset of
+    `:allowed`. This collection is a map in the shape
+    `%{index => word, ...}`.
 
 
   The cache warming task is run automatically at application startup.
@@ -52,6 +54,9 @@ defmodule WeDle.WordleWords do
 
   @type word :: String.t()
 
+  # The start date to count from when calculating the index of today's word.
+  @start_date ~D[2021-06-19]
+
   @doc """
   Starts and links a task to load the word lists from file and store
   them in a `:persistent_term` cache.
@@ -81,29 +86,56 @@ defmodule WeDle.WordleWords do
 
   @doc """
   Validates if the `word` is one of the allowed guesses according
-  to the official Wordle source. Returns a boolean value.
+  to the official Wordle source.
+
+  Returns a boolean value.
   """
-  @spec allowed_contains?(word) :: boolean
-  def allowed_contains?(word), do: contains?(:allowed, word)
+  @spec allowed?(word) :: boolean
+  def allowed?(word) do
+    {__MODULE__, :allowed}
+    |> :persistent_term.get()
+    |> Map.get(word, false)
+  end
 
   @doc """
-  Validates if the `word` is one of the possible answers according
-  to the official Wordle source. Returns a boolean value.
+  Validates if the `word` is today's official Wordle answer.
+
+  Returns a boolean value.
   """
-  @spec answers_contains?(word) :: boolean
-  def answers_contains?(word), do: contains?(:answers, word)
+  @spec todays_answer?(word) :: boolean
+  def todays_answer?(word), do: word == todays_answer()
+
+  @doc """
+  Returns today's official Wordle answer.
+  """
+  @spec todays_answer :: word
+  def todays_answer do
+    diff = Date.diff(Date.utc_today(), @start_date)
+
+    {__MODULE__, :answers}
+    |> :persistent_term.get()
+    |> Map.get(diff)
+  end
 
   defp load_words do
-    answers =
+    answers_stream =
       "answers.txt"
       |> Path.absname(words_path())
-      |> stream_file_and_map()
+      |> File.stream!(encoding: :utf8)
+
+    answers =
+      answers_stream
+      |> Stream.map(&String.trim(:binary.copy(&1), "\n"))
+      |> Stream.with_index()
+      |> Stream.map(fn {v, i} -> {i, v} end)
+      |> Enum.into(%{})
 
     allowed =
       "extras.txt"
       |> Path.absname(words_path())
-      |> stream_file_and_map()
-      |> Map.merge(answers)
+      |> File.stream!(encoding: :utf8)
+      |> stream_and_map()
+      |> Map.merge(stream_and_map(answers_stream))
 
     :persistent_term.put({__MODULE__, :answers}, answers)
     :persistent_term.put({__MODULE__, :allowed}, allowed)
@@ -119,16 +151,9 @@ defmodule WeDle.WordleWords do
     end
   end
 
-  defp stream_file_and_map(path) do
-    path
-    |> File.stream!(encoding: :utf8)
+  defp stream_and_map(stream) do
+    stream
     |> Stream.map(&{String.trim(:binary.copy(&1), "\n"), true})
     |> Enum.into(%{})
-  end
-
-  defp contains?(bucket, word) do
-    {__MODULE__, bucket}
-    |> :persistent_term.get()
-    |> Map.get(word, false)
   end
 end

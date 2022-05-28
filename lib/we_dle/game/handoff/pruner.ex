@@ -39,7 +39,7 @@ defmodule WeDle.Game.Handoff.Pruner do
   def handle_info(:prune, %{node_status: :shutting_down} = state), do: {:noreply, state}
 
   def handle_info(:prune, state) do
-    Logger.info("#{__MODULE__} deleting handoffs older than 24 hours")
+    Logger.info("#{__MODULE__} deleting handoffs older than three hours")
 
     :second
     |> Handoff.expiration_time()

@@ -195,7 +195,7 @@ defmodule WeDle.Game.Server do
       {:ok, %Handoff{}} ->
         Logger.debug("handoff created for game with ID: \"#{game.id}\"")
 
-      {:error, %{errors: [started_at: {"cannot be over twenty-four hours old", _}]}} ->
+      {:error, %{errors: [started_at: {"can't be over three hours old", _}]}} ->
         Logger.debug("no handoff was created for expired game with ID \"#{game.id}\"")
 
       {:error, changeset} ->

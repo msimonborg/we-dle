@@ -63,13 +63,13 @@ defmodule WeDle.Schemas.Handoff do
   ## Examples
 
       iex> WeDle.Schemas.Handoff.expiration_time(:second)
-      86_400
+      10_800
 
       iex> WeDle.Schemas.Handoff.expiration_time(:millisecond)
-      86_400_000
+      10_800_000
   """
   @spec expiration_time(:second | :millisecond | :microsecond | :nanosecond) :: pos_integer
-  def expiration_time(:second), do: 24 * 60 * 60
+  def expiration_time(:second), do: 3 * 60 * 60
   def expiration_time(:millisecond), do: expiration_time(:second) * 1000
   def expiration_time(:microsecond), do: expiration_time(:millisecond) * 1000
   def expiration_time(:nanosecond), do: expiration_time(:microsecond) * 1000
@@ -78,7 +78,7 @@ defmodule WeDle.Schemas.Handoff do
     diff = DateTime.diff(DateTime.utc_now(), started_at, :second)
 
     if diff >= expiration_time(:second) do
-      [started_at: "can't be over twenty-four hours old"]
+      [started_at: "can't be over three hours old"]
     else
       []
     end

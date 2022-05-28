@@ -17,7 +17,7 @@ defmodule WeDle.Game do
 
   alias WeDle.Schemas.Handoff
 
-  defstruct [:id, :word_length, :winner, players: %{}, edge_servers: %{}]
+  defstruct [:id, :word_length, :started_at, :winner, players: %{}, edge_servers: %{}]
 
   @type id :: String.t()
   @type option :: {:word_length, pos_integer}
@@ -26,6 +26,7 @@ defmodule WeDle.Game do
   @type t :: %__MODULE__{
           id: id,
           word_length: pos_integer,
+          started_at: DateTime.t(),
           players: %{id => player},
           edge_servers: %{
             id => %{

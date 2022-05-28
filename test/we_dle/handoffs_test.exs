@@ -12,6 +12,7 @@ defmodule WeDle.HandoffsTest do
       assert {:ok, handoff} = create_handoff(game)
       assert handoff.game_id == game.id
       assert handoff.word_length == game.word_length
+      assert handoff.started_at == game.started_at
       assert handoff.player1_challenge == "hello"
       assert handoff.player1_id == "player1"
       assert handoff.player1_rows == "world\n\n\n\n\n"
@@ -24,6 +25,7 @@ defmodule WeDle.HandoffsTest do
       assert {:error, changeset} = create_handoff(%Game{})
       assert {"can't be blank", _} = changeset.errors[:game_id]
       assert {"can't be blank", _} = changeset.errors[:word_length]
+      assert {"can't be blank", _} = changeset.errors[:started_at]
 
       assert {:error, changeset} = create_handoff(%Game{word_length: 11})
       assert {"is invalid", _} = changeset.errors[:word_length]
@@ -31,6 +33,10 @@ defmodule WeDle.HandoffsTest do
       assert {:ok, _} = create_handoff(game)
       assert {:error, changeset} = create_handoff(%Game{id: game.id, word_length: 5})
       assert {"has already been taken", _} = changeset.errors[:game_id]
+
+      old_time = DateTime.add(DateTime.utc_now(), -(24 * 60 * 60 + 1), :second)
+      assert {:error, changeset} = create_handoff(%{game | started_at: old_time})
+      assert {"can't be over twenty-four hours old", _} = changeset.errors[:started_at]
     end
   end
 
@@ -111,6 +117,7 @@ defmodule WeDle.HandoffsTest do
     game = %Game{
       id: game_id,
       word_length: word_length,
+      started_at: DateTime.utc_now(),
       players: %{"player1" => player1, "player2" => player2}
     }
 

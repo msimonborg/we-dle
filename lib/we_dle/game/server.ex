@@ -61,7 +61,9 @@ defmodule WeDle.Game.Server do
     # avoid a possible race condition with the Handoff.Listener
     register_for_handoff(game_id)
 
-    {:ok, %Game{id: game_id, word_length: word_length}, {:continue, :load_game}}
+    game = %Game{id: game_id, word_length: word_length, started_at: DateTime.utc_now()}
+
+    {:ok, game, {:continue, :load_game}}
   end
 
   @impl true
@@ -188,6 +190,9 @@ defmodule WeDle.Game.Server do
     case Handoffs.create_handoff(game) do
       {:ok, %Handoff{}} ->
         Logger.debug("handoff created for game with ID: \"#{game.id}\"")
+
+      {:error, %{errors: [started_at: {"cannot be over twenty-four hours old", _}]}} ->
+        Logger.debug("no handoff was created for expired game with ID \"#{game.id}\"")
 
       {:error, changeset} ->
         errors = for {field, {msg, _}} <- changeset.errors, do: "#{field} #{msg}"

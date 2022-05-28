@@ -87,7 +87,8 @@ defmodule WeDle.Game.HandoffTest do
           }
         },
         winner: nil,
-        word_length: 5
+        word_length: 5,
+        started_at: DateTime.utc_now()
       }
 
       Handoffs.create_handoff(handoff_state)

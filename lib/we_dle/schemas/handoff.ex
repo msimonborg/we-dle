@@ -12,6 +12,7 @@ defmodule WeDle.Schemas.Handoff do
   schema "handoffs" do
     field :game_id, :string
     field :word_length, :integer
+    field :started_at, :utc_datetime_usec
     field :player1_id, :string
     field :player1_challenge, :string
     field :player1_rows, :string
@@ -25,6 +26,7 @@ defmodule WeDle.Schemas.Handoff do
   @fields [
     :game_id,
     :word_length,
+    :started_at,
     :player1_id,
     :player1_challenge,
     :player1_rows,
@@ -43,9 +45,21 @@ defmodule WeDle.Schemas.Handoff do
 
     %__MODULE__{}
     |> cast(handoff, @fields)
-    |> validate_required([:game_id, :word_length])
+    |> validate_required([:game_id, :word_length, :started_at])
     |> unsafe_validate_unique([:game_id], Repo)
     |> validate_inclusion(:word_length, 3..10)
+    |> validate_change(:started_at, &validate_lt_twenty_four_hours_old/2)
+  end
+
+  defp validate_lt_twenty_four_hours_old(:started_at, started_at) do
+    twenty_four_hours = 24 * 60 * 60
+    diff = DateTime.diff(DateTime.utc_now(), started_at, :second)
+
+    if diff >= twenty_four_hours do
+      [started_at: "can't be over twenty-four hours old"]
+    else
+      []
+    end
   end
 
   defp build_handoff_from_game(game) do
@@ -53,7 +67,8 @@ defmodule WeDle.Schemas.Handoff do
 
     %{
       game_id: game.id,
-      word_length: game.word_length
+      word_length: game.word_length,
+      started_at: game.started_at
     }
     |> maybe_add_players(players)
   end

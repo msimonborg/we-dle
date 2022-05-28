@@ -48,14 +48,36 @@ defmodule WeDle.Schemas.Handoff do
     |> validate_required([:game_id, :word_length, :started_at])
     |> unsafe_validate_unique([:game_id], Repo)
     |> validate_inclusion(:word_length, 3..10)
-    |> validate_change(:started_at, &validate_lt_twenty_four_hours_old/2)
+    |> validate_change(:started_at, &validate_not_expired/2)
   end
 
-  defp validate_lt_twenty_four_hours_old(:started_at, started_at) do
-    twenty_four_hours = 24 * 60 * 60
+  @doc """
+  Returns the expiration time before a handoff is invalid.
+
+  The return value is a positive integer representing the
+  valid duration of a Handoff in the given `unit`. Unit must
+  be one of `:second | :millisecond | :microsecond | :nanosecond`.
+
+  Handoffs expire after 86400 seconds, i.e. twenty-four hours.
+
+  ## Examples
+
+      iex> WeDle.Schemas.Handoff.expiration_time(:second)
+      86_400
+
+      iex> WeDle.Schemas.Handoff.expiration_time(:millisecond)
+      86_400_000
+  """
+  @spec expiration_time(:second | :millisecond | :microsecond | :nanosecond) :: pos_integer
+  def expiration_time(:second), do: 24 * 60 * 60
+  def expiration_time(:millisecond), do: expiration_time(:second) * 1000
+  def expiration_time(:microsecond), do: expiration_time(:millisecond) * 1000
+  def expiration_time(:nanosecond), do: expiration_time(:microsecond) * 1000
+
+  defp validate_not_expired(:started_at, started_at) do
     diff = DateTime.diff(DateTime.utc_now(), started_at, :second)
 
-    if diff >= twenty_four_hours do
+    if diff >= expiration_time(:second) do
       [started_at: "can't be over twenty-four hours old"]
     else
       []

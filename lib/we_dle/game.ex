@@ -188,28 +188,15 @@ defmodule WeDle.Game do
   end
 
   @doc """
-  Generates a UUID using `Ecto.UUID.generate/0`.
-
-  See also `unique_namespaced_id/0`.
+  Generates a unique game ID.
 
   ## Examples
 
       WeDle.Game.unique_id()
-      # => "508ad0b3-cdcc-422a-abc8-d043e4e9fa6e"
+      # => "0095dda6-5eb3-4c1d-8437-f0b792fe82b1"
   """
   @spec unique_id :: String.t()
   def unique_id, do: Ecto.UUID.generate()
-
-  @doc ~S"""
-  Same as `unique_id/0` but prefixes the ID with `"#{Node.self()}-"`.
-
-  ## Examples
-
-      WeDle.Game.unique_namespaced_id()
-      # => "nonode@nohost-cb6a0984-fb85-4035-ae3b-bbe5cbfd004b"
-  """
-  @spec unique_namespaced_id :: String.t()
-  def unique_namespaced_id, do: "#{Node.self()}-#{unique_id()}"
 
   @doc """
   Checks if the game exists as a running server or a stored handoff.

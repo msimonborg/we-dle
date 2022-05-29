@@ -37,7 +37,10 @@ defmodule WeDleWeb.GameControllerTest do
     test "redirects to index and deletes from session if the game ID doesn't exist", %{conn: conn} do
       id = Game.unique_id()
 
-      conn = get(conn, Routes.game_path(conn, :show, id))
+      conn =
+        conn
+        |> put_session(:game_id, id)
+        |> get(Routes.game_path(conn, :show, id))
 
       assert redirected_to(conn) == Routes.game_path(conn, :index)
       assert get_session(conn, :game_id) |> is_nil()

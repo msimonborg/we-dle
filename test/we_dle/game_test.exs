@@ -27,4 +27,24 @@ defmodule WeDle.GameTest do
       assert {:game_down, :shutdown} = msg
     end
   end
+
+  describe "exists?/1" do
+    test "checks if a game exists either as a running server or an available handoff" do
+      game = "exists"
+
+      refute exists?(game)
+
+      {:ok, _} = start_or_join(game, "p1")
+      assert exists?(game)
+
+      pid = whereis(game)
+
+      Process.exit(pid, :shutdown)
+      Process.sleep(10)
+
+      assert game |> whereis() |> is_nil()
+      assert exists?(game)
+      refute WeDle.Handoffs.get_handoff(game) |> is_nil()
+    end
+  end
 end

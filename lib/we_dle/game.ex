@@ -15,6 +15,7 @@ defmodule WeDle.Game do
     ServerSupervisor
   }
 
+  alias WeDle.Handoffs
   alias WeDle.Schemas.Handoff
 
   defstruct [:id, :word_length, :started_at, :winner, players: %{}, edge_servers: %{}]
@@ -184,6 +185,47 @@ defmodule WeDle.Game do
   """
   def name(game_id) do
     DistributedRegistry.via_tuple(game_id)
+  end
+
+  @doc """
+  Generates a UUID using `Ecto.UUID.generate/0`.
+
+  See also `unique_namespaced_id/0`.
+
+  ## Examples
+
+      WeDle.Game.unique_id()
+      # => "508ad0b3-cdcc-422a-abc8-d043e4e9fa6e"
+  """
+  @spec unique_id :: String.t()
+  def unique_id, do: Ecto.UUID.generate()
+
+  @doc ~S"""
+  Same as `unique_id/0` but prefixes the ID with `"#{Node.self()}-"`.
+
+  ## Examples
+
+      WeDle.Game.unique_namespaced_id()
+      # => "nonode@nohost-cb6a0984-fb85-4035-ae3b-bbe5cbfd004b"
+  """
+  @spec unique_namespaced_id :: String.t()
+  def unique_namespaced_id, do: "#{Node.self()}-#{unique_id()}"
+
+  @doc """
+  Checks if the game exists as a running server or a stored handoff.
+
+  ## Examples
+
+      iex> WeDle.Game.start_or_join("existing", "p1")
+      iex> WeDle.Game.exists?("existing")
+      true
+
+      iex> WeDle.Game.exists?("non-existing")
+      false
+  """
+  @spec exists?(id) :: boolean
+  def exists?(game_id) do
+    !!(whereis(game_id) || Handoffs.get_handoff(game_id))
   end
 
   @doc """

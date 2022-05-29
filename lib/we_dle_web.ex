@@ -21,8 +21,10 @@ defmodule WeDleWeb do
     quote do
       use Phoenix.Controller, namespace: WeDleWeb
 
+      import Phoenix.LiveView.Controller
       import Plug.Conn
       import WeDleWeb.Gettext
+
       alias WeDleWeb.Router.Helpers, as: Routes
     end
   end

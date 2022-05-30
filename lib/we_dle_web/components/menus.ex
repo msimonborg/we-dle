@@ -21,9 +21,9 @@ defmodule WeDleWeb.Components.Menus do
             x-transition:leave="transform transition ease-in-out duration-500"
             x-transition:leave-start="-translate-x-0"
             x-transition:leave-end="-translate-x-full"
-            class="pointer-events-none fixed h-full left-0 flex max-w-full pr-10"
+            class="pointer-events-none fixed h-full left-0 flex max-w-full"
           >
-            <div class="pointer-events-auto w-screen max-w-sm">
+            <div class="pointer-events-auto w-screen sm:max-w-sm">
               <div class={
                 "flex h-full flex-col overflow-y-scroll #{background_color(@theme)} border-r #{border_color(@theme)} py-6 shadow-2xl"
               }>

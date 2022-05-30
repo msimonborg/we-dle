@@ -2,7 +2,7 @@
 
 ## Real-time distributed multiplayer Wordle-like game
 
-WIP running at [we-dle.fly.dev](https://we-dle.fly.dev)
+Coming soon to [we-dle.com](http://we-dle.com). WIP running at [we-dle.fly.dev](https://we-dle.fly.dev)
 
 ## What is `we-dle`?
 
@@ -82,7 +82,7 @@ To contribute:
   of what your changes are and why you've made them
   * Please keep PRs small and limited in scope
 
-If you can run a [LiveBook](https://livebook.dev/) server locally you can open the open the project
+If you can run a [LiveBook](https://livebook.dev/) server locally you can open the project
 notebooks in the `./notebooks/` directory. Connect your server's runtime to the project by using the
 "Mix standalone" runtime setting.
 

@@ -18,6 +18,9 @@ defmodule WeDleWeb.Components.Buttons do
       raise "expected :theme assign for menu button component"
     end
 
+    extras = assigns_to_attributes(assigns, [:sr_text, :id, :theme])
+    assigns = assign(assigns, :extras, extras)
+
     ~H"""
     <button
       type="button"
@@ -25,6 +28,7 @@ defmodule WeDleWeb.Components.Buttons do
       id={@id}
       aria-expanded="false"
       aria-haspopup="true"
+      {@extras}
     >
       <span class="sr-only"><%= @sr_text %></span>
       <%= render_slot(@inner_block) %>
@@ -32,6 +36,6 @@ defmodule WeDleWeb.Components.Buttons do
     """
   end
 
-  defp text_color(:light), do: "text-gray-600 hover:text-gray-800"
-  defp text_color(:dark), do: "text-gray-200 hover:text-gray-400"
+  defp text_color(:light), do: "text-zinc-600 hover:text-zinc-800"
+  defp text_color(:dark), do: "text-zinc-200 hover:text-zinc-400"
 end

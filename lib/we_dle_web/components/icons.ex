@@ -63,11 +63,52 @@ defmodule WeDleWeb.Components.Icons do
     """
   end
 
+  @doc """
+  Heroicon name: outline/x
+  """
+  def outline_x(assigns) do
+    ~H"""
+    <.outline {assigns}>
+      <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+    </.outline>
+    """
+  end
+
   defp solid(assigns) do
-    assigns = assign_new(assigns, :class, fn -> "h-5 w-5" end)
+    assigns =
+      assigns
+      |> assign_new(:class, fn -> "h-5 w-5" end)
+      |> assign(:extras, assigns_to_attributes(assigns, [:class]))
 
     ~H"""
-    <svg xmlns="http://www.w3.org/2000/svg" class={@class} viewBox="0 0 20 20" fill="currentColor">
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      class={@class}
+      viewBox="0 0 20 20"
+      fill="currentColor"
+      {@extras}
+    >
+      <%= render_slot(@inner_block) %>
+    </svg>
+    """
+  end
+
+  defp outline(assigns) do
+    assigns =
+      assigns
+      |> assign_new(:class, fn -> "h-6 w-6" end)
+      |> assign(:extras, assigns_to_attributes(assigns, [:class]))
+
+    ~H"""
+    <svg
+      class="h-6 w-6"
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke-width="2"
+      stroke="currentColor"
+      {@extras}
+    >
       <%= render_slot(@inner_block) %>
     </svg>
     """

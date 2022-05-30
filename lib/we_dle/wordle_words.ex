@@ -100,13 +100,19 @@ defmodule WeDle.WordleWords do
   @doc """
   Validates if the `word` is today's official Wordle answer.
 
-  Returns a boolean value.
+  Returns a boolean value. See `todays_answer/0` for more information.
   """
   @spec todays_answer?(word) :: boolean
   def todays_answer?(word), do: word == todays_answer()
 
   @doc """
   Returns today's official Wordle answer.
+
+  "Today" is based on UTC time. This is so players around the world
+  can have a consistent answer to the question "what is today's word?".
+
+  Depending on the player's time zone this may differ by several hours
+  from the word they would get when playing Wordle.
   """
   @spec todays_answer :: word
   def todays_answer do

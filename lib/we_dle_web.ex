@@ -99,6 +99,8 @@ defmodule WeDleWeb do
 
       import WeDleWeb.ErrorHelpers
       import WeDleWeb.Gettext
+
+      alias WeDleWeb.Components
       alias WeDleWeb.Router.Helpers, as: Routes
     end
   end

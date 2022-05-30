@@ -14,7 +14,10 @@ defmodule WeDleWeb.GameLive.Show do
 
   @impl true
   def mount(_params, session, socket) do
-    %{"player_id" => player_id, "game_id" => game_id} = session
-    {:ok, assign(socket, player_id: player_id, game_id: game_id)}
+    game_id = Map.fetch!(session, "game_id")
+    player_id = Map.fetch!(session, "player_id")
+    current_user = Map.fetch!(session, "current_user")
+
+    {:ok, assign(socket, player_id: player_id, current_user: current_user, game_id: game_id)}
   end
 end

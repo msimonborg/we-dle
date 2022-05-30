@@ -111,7 +111,7 @@ defmodule WeDle.Game.Server do
   @impl true
   def handle_info(:expire, game) do
     Logger.debug("game with ID: \"#{game.id}\" expiring")
-    {:stop, :normal, game}
+    {:stop, {:shutdown, :expired}, game}
   end
 
   def handle_info(:handoff_available, %{id: id} = _stale_game) do
@@ -190,13 +190,16 @@ defmodule WeDle.Game.Server do
   end
 
   @impl true
+  def terminate({:shutdown, :expired}, game) do
+    Logger.debug("game with ID: \"#{game.id}\" expiring")
+    :ok
+  end
+
   def terminate(_, game) do
     case Handoffs.create_handoff(game) do
       {:ok, %Handoff{}} ->
         Logger.debug("handoff created for game with ID: \"#{game.id}\"")
-
-      {:error, %{errors: [started_at: {"can't be over three hours old", _}]}} ->
-        Logger.debug("no handoff was created for expired game with ID \"#{game.id}\"")
+        :ok
 
       {:error, changeset} ->
         errors = for {field, {msg, _}} <- changeset.errors, do: "#{field} #{msg}"
@@ -206,8 +209,10 @@ defmodule WeDle.Game.Server do
         attempting to delete old handoff and try once more to create a new one
         """)
 
-        Handoffs.delete_handoff_if_exists(game.id)
-        Handoffs.create_handoff(game)
+        if Handoffs.delete_handoff_if_exists(game.id),
+          do: Handoffs.create_handoff(game)
+
+        :ok
     end
   end
 

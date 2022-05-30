@@ -59,9 +59,15 @@ defmodule WeDleWeb.Components.App do
                   <Components.Icons.solid_question_mark_circle class="h-7 w-7" />
                 </Components.Buttons.menu_button>
               </div>
-              <div class="flex">
-                <div class="flex-shrink-0 flex items-center">
-                  <p class={"font-serif font-bold text-4xl #{text_color(@theme)}"}>we-dle</p>
+              <div x-data="{bounce: false}" id="logo" phx-update="ignore" class="flex">
+                <div
+                  @click="bounce = ! bounce"
+                  :class="bounce && 'animate-bounce'"
+                  class="flex-shrink-0 flex items-center"
+                >
+                  <p class={"font-serif font-bold text-4xl #{text_color(@theme)}"}>
+                    we-dle
+                  </p>
                 </div>
               </div>
               <div class="flex items-center">

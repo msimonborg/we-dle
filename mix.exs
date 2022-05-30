@@ -38,7 +38,6 @@ defmodule WeDle.MixProject do
       {:benchee, "~> 1.1", only: :dev},
       {:benchee_html, "~> 1.0", only: :dev},
       {:credo, "~> 1.6", only: [:dev, :test], runtime: false},
-      {:delta_crdt, "~> 0.6.4"},
       {:ecto_sql, "~> 3.6"},
       {:esbuild, "~> 0.4", runtime: Mix.env() == :dev},
       {:ex_doc, "~> 0.1", only: [:test, :dev]},

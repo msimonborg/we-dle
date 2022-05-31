@@ -36,6 +36,6 @@ defmodule WeDleWeb.Components.Buttons do
     """
   end
 
-  defp text_color(:light), do: "text-zinc-600 hover:text-zinc-800"
-  defp text_color(:dark), do: "text-zinc-200 hover:text-zinc-400"
+  defp text_color("light"), do: "text-zinc-600 hover:text-zinc-800"
+  defp text_color("dark"), do: "text-zinc-200 hover:text-zinc-400"
 end

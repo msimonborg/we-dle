@@ -32,8 +32,6 @@ defmodule WeDleWeb.Components.App do
   end
 
   def shell(assigns) do
-    assigns = assign_new(assigns, :theme, fn -> :light end)
-
     ~H"""
     <div x-data="{ mainMenuOpen: false }">
       <div class={"h-screen #{background_color(@theme)}"}>

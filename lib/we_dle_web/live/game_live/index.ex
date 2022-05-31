@@ -14,9 +14,12 @@ defmodule WeDleWeb.GameLive.Index do
 
   @impl true
   def mount(_params, session, socket) do
-    player_id = Map.fetch!(session, "player_id")
+    settings = Map.fetch!(session, "settings")
     current_user = Map.fetch!(session, "current_user")
 
-    {:ok, assign(socket, player_id: player_id, current_user: current_user)}
+    {:ok,
+     socket
+     |> assign(:current_user, current_user)
+     |> assign(Map.from_struct(settings))}
   end
 end

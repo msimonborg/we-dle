@@ -3,7 +3,7 @@ defmodule WeDleWeb.Router do
 
   import Phoenix.LiveDashboard.Router
   import WeDleWeb.Admin.UserAuth
-  import WeDleWeb.PlayerAuth
+  import WeDleWeb.SettingsController
 
   pipeline :browser do
     plug :accepts, ["html"]
@@ -13,7 +13,7 @@ defmodule WeDleWeb.Router do
     plug :protect_from_forgery
     plug :put_secure_browser_headers
     plug :fetch_current_user
-    plug :fetch_or_store_player
+    plug :fetch_or_store_settings
   end
 
   pipeline :api do
@@ -93,11 +93,13 @@ defmodule WeDleWeb.Router do
     post "/users/confirm/:token", UserConfirmationController, :update
   end
 
-  # These routes must go last or /:game_id always matches any single-nested path
   scope "/", WeDleWeb do
     pipe_through :browser
 
+    post "/settings", SettingsController, :index
+
     get "/", GameController, :index
+    # This route must go last or /:game_id always matches any single-nested path
     get "/:game_id", GameController, :show
   end
 end

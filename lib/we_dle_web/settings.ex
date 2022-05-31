@@ -12,7 +12,7 @@ defmodule WeDleWeb.Settings do
 
   @fields [
     :player_id,
-    :theme,
+    :dark_theme,
     :hard_mode,
     :high_contrast
   ]
@@ -23,25 +23,27 @@ defmodule WeDleWeb.Settings do
 
   embedded_schema do
     field :player_id, :string
-    field :theme, :string
-    field :hard_mode, :boolean
-    field :high_contrast, :boolean
+    field :dark_theme, :integer
+    field :hard_mode, :integer
+    field :high_contrast, :integer
   end
 
   def changeset(settings, attrs) do
     settings
     |> cast(attrs, @fields)
     |> validate_required(@fields)
+    |> validate_inclusion(:dark_theme, [0, 1])
+    |> validate_inclusion(:hard_mode, [0, 1])
+    |> validate_inclusion(:high_contrast, [0, 1])
     |> validate_length(:player_id, is: 36)
-    |> validate_inclusion(:theme, ["light", "dark"])
   end
 
   def new(attrs \\ %{}) do
     %__MODULE__{
       player_id: Game.unique_id(),
-      theme: attrs[:theme] || "light",
-      hard_mode: attrs[:hard_mode] || false,
-      high_contrast: attrs[:high_contrast] || false
+      dark_theme: attrs[:dark_theme] || 0,
+      hard_mode: attrs[:hard_mode] || 0,
+      high_contrast: attrs[:high_contrast] || 0
     }
   end
 end

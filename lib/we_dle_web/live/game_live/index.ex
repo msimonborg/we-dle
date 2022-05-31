@@ -5,6 +5,8 @@ defmodule WeDleWeb.GameLive.Index do
 
   use WeDleWeb, :live_view
 
+  alias WeDleWeb.Settings
+
   @impl true
   def render(assigns) do
     ~H"""
@@ -16,10 +18,12 @@ defmodule WeDleWeb.GameLive.Index do
   def mount(_params, session, socket) do
     settings = Map.fetch!(session, "settings")
     current_user = Map.fetch!(session, "current_user")
+    settings_changeset = Settings.changeset(settings, %{})
 
     {:ok,
      socket
      |> assign(:current_user, current_user)
-     |> assign(Map.from_struct(settings))}
+     |> assign(Map.from_struct(settings))
+     |> assign(:settings_changeset, settings_changeset)}
   end
 end

@@ -16,7 +16,7 @@ defmodule WeDleWeb.SettingsControllerTest do
 
   test "stores valid settings as a Settings struct in the session", %{conn: conn} do
     return_to = "/"
-    settings = Settings.new(theme: "dark")
+    settings = Settings.new(dark_theme: 1)
     params = %{settings: Map.from_struct(settings), return_to: return_to}
 
     conn =
@@ -32,7 +32,7 @@ defmodule WeDleWeb.SettingsControllerTest do
 
   test "will not store settings when they are invalid", %{conn: conn} do
     return_to = "/"
-    settings = Settings.new(theme: "burgundy")
+    settings = Settings.new(dark_theme: true)
     params = %{settings: Map.from_struct(settings), return_to: return_to}
 
     conn =

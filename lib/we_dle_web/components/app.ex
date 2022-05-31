@@ -5,11 +5,11 @@ defmodule WeDleWeb.Components.App do
 
   use WeDleWeb, :component
 
-  import WeDleWeb.GameLive.Helpers
+  import WeDleWeb.LiveHelpers
 
   def link(assigns) do
-    unless assigns[:theme] do
-      raise "expected :theme assign for link component"
+    unless assigns[:dark_theme] do
+      raise "expected :dark_theme assign for link component"
     end
 
     unless assigns[:to] do
@@ -26,16 +26,16 @@ defmodule WeDleWeb.Components.App do
       to: @to,
       method: @method,
       target: @target,
-      class: "#{text_color(@theme)} #{hover_text_color(@theme)}"
+      class: "#{text_color(@dark_theme)} #{hover_text_color(@dark_theme)}"
     ) %>
     """
   end
 
   def shell(assigns) do
     ~H"""
-    <div x-data="{ mainMenuOpen: false }">
-      <div class={"h-screen #{background_color(@theme)}"}>
-        <nav class={"border-b #{border_color(@theme)}"}>
+    <div x-data="{ mainMenuOpen: false, settingsOpen: false }">
+      <div class={"h-screen #{background_color(@dark_theme)}"}>
+        <nav class={"border-b #{border_color(@dark_theme)}"}>
           <div class="max-w-full mx-auto px-4">
             <div class="flex justify-between h-16">
               <div class="flex items-center">
@@ -43,7 +43,7 @@ defmodule WeDleWeb.Components.App do
                 <Components.Buttons.menu_button
                   id="open-main-menu-button"
                   sr_text="Open Main Menu"
-                  theme={@theme}
+                  dark_theme={@dark_theme}
                   @click="mainMenuOpen = ! mainMenuOpen"
                 >
                   <Components.Icons.solid_menu class="h-7 w-7" />
@@ -52,7 +52,7 @@ defmodule WeDleWeb.Components.App do
                 <Components.Buttons.menu_button
                   id="open-help-menu-button"
                   sr_text="Open Help Menu"
-                  theme={@theme}
+                  dark_theme={@dark_theme}
                 >
                   <Components.Icons.solid_question_mark_circle class="h-7 w-7" />
                 </Components.Buttons.menu_button>
@@ -63,7 +63,7 @@ defmodule WeDleWeb.Components.App do
                   :class="bounce && 'animate-bounce'"
                   class="flex-shrink-0 flex items-center"
                 >
-                  <p class={"font-serif font-bold text-4xl #{text_color(@theme)}"}>
+                  <p class={"font-serif font-bold text-4xl #{text_color(@dark_theme)}"}>
                     we-dle
                   </p>
                 </div>
@@ -73,7 +73,7 @@ defmodule WeDleWeb.Components.App do
                 <Components.Buttons.menu_button
                   id="open-stats-menu-button"
                   sr_text="Open Stats Menu"
-                  theme={@theme}
+                  dark_theme={@dark_theme}
                 >
                   <Components.Icons.solid_chart_bar class="h-7 w-7" />
                 </Components.Buttons.menu_button>
@@ -81,7 +81,8 @@ defmodule WeDleWeb.Components.App do
                 <Components.Buttons.menu_button
                   id="open-settings-menu-button"
                   sr_text="Open Settings Menu"
-                  theme={@theme}
+                  dark_theme={@dark_theme}
+                  @click="settingsOpen = ! settingsOpen"
                 >
                   <Components.Icons.solid_cog class="h-7 w-7" />
                 </Components.Buttons.menu_button>
@@ -94,6 +95,9 @@ defmodule WeDleWeb.Components.App do
           <main>
             <div phx-update="ignore" id="main-menu">
               <Components.Menus.main_menu x_data_var="mainMenuOpen" {assigns} />
+            </div>
+            <div phx-update="ignore" id="settings">
+              <Components.Menus.settings x_data_var="settingsOpen" {assigns} />
             </div>
             <%= render_slot(@inner_block) %>
           </main>

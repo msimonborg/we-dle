@@ -14,17 +14,17 @@ defmodule WeDleWeb.Components.Buttons do
       raise "expected :id assign for menu button component"
     end
 
-    unless assigns[:theme] do
-      raise "expected :theme assign for menu button component"
+    unless assigns[:dark_theme] do
+      raise "expected :dark_theme assign for menu button component"
     end
 
-    extras = assigns_to_attributes(assigns, [:sr_text, :id, :theme])
+    extras = assigns_to_attributes(assigns, [:sr_text, :id, :dark_theme])
     assigns = assign(assigns, :extras, extras)
 
     ~H"""
     <button
       type="button"
-      class={"bg-transparent p-1 #{text_color(@theme)}"}
+      class={"bg-transparent p-1 #{text_color(@dark_theme)}"}
       id={@id}
       aria-expanded="false"
       aria-haspopup="true"
@@ -36,6 +36,6 @@ defmodule WeDleWeb.Components.Buttons do
     """
   end
 
-  defp text_color("light"), do: "text-zinc-600 hover:text-zinc-800"
-  defp text_color("dark"), do: "text-zinc-200 hover:text-zinc-400"
+  defp text_color(0 = _dark_theme), do: "text-zinc-600 hover:text-zinc-800"
+  defp text_color(1 = _dark_theme), do: "text-zinc-200 hover:text-zinc-400"
 end

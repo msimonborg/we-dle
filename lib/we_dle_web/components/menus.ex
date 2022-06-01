@@ -15,7 +15,7 @@ defmodule WeDleWeb.Components.Menus do
         <div class="absolute overflow-hidden">
           <div
             x-cloak
-            x-show={@x_data_var}
+            x-show={@open_state}
             x-transition:enter="transform transition ease-in-out duration-500"
             x-transition:enter-start="-translate-x-full"
             x-transition:enter-end="-translate-x-0"
@@ -48,10 +48,9 @@ defmodule WeDleWeb.Components.Menus do
                         id="close-main-menu-button"
                         sr_text="Close Main Menu"
                         dark_theme={@dark_theme}
-                        @click={"#{@x_data_var} = ! #{@x_data_var}"}
+                        @click={"#{@open_state} = ! #{@open_state}"}
                       >
-                        <span class="sr-only">Close panel</span>
-                        <Components.Icons.outline_x aria-hidden="true" />
+                        <Components.Icons.outline_x aria-hidden={"! #{@open_state}"} />
                       </Components.Buttons.menu_button>
                     </div>
                   </div>
@@ -139,7 +138,7 @@ defmodule WeDleWeb.Components.Menus do
       <!-- Background backdrop, show/hide based on modal state. -->
       <div
         x-cloak
-        x-show={@x_data_var}
+        x-show={@open_state}
         x-transition:enter="ease-out duration-300"
         x-transition:enter-start="opacity-0"
         x-transition:enter-end="opacity-100"
@@ -155,7 +154,7 @@ defmodule WeDleWeb.Components.Menus do
           <!-- Modal panel, show/hide based on modal state. -->
           <div
             x-cloak
-            x-show={@x_data_var}
+            x-show={@open_state}
             x-transition:enter="ease-out duration-300"
             x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
             x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
@@ -171,7 +170,7 @@ defmodule WeDleWeb.Components.Menus do
                 sr_text="Close Settings Menu"
                 id="close-settings"
                 dark_theme={@dark_theme}
-                @click={"#{@x_data_var} = ! #{@x_data_var}"}
+                @click={"#{@open_state} = ! #{@open_state}"}
               >
                 <Components.Icons.outline_x />
               </Components.Buttons.menu_button>
@@ -190,6 +189,7 @@ defmodule WeDleWeb.Components.Menus do
                   field={:hard_mode}
                   label="Hard Mode"
                   value={@hard_mode}
+                  sr_text="Toggle Hard Mode"
                   {assigns}
                 />
                 <.settings_menu_input
@@ -197,6 +197,7 @@ defmodule WeDleWeb.Components.Menus do
                   field={:dark_theme}
                   label="Dark Theme"
                   value={@dark_theme}
+                  sr_text="Toggle Dark Theme"
                   {assigns}
                 />
                 <.settings_menu_input
@@ -204,6 +205,7 @@ defmodule WeDleWeb.Components.Menus do
                   field={:high_contrast}
                   label="High Contrast Mode"
                   value={@high_contrast}
+                  sr_text="Toggle High Contrast Mode"
                   {assigns}
                 />
               </div>

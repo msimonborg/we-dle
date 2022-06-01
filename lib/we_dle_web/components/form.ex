@@ -7,23 +7,27 @@ defmodule WeDleWeb.Components.Form do
 
   def toggle_input(assigns) do
     unless assigns[:form] do
-      raise "expected :form assign for menu button component"
+      raise "expected :form assign for toggle_input component"
     end
 
     unless assigns[:field] do
-      raise "expected :field assign for menu button component"
+      raise "expected :field assign for toggle_input component"
     end
 
     unless assigns[:label] do
-      raise "expected :label assign for menu button component"
+      raise "expected :label assign for toggle_input component"
     end
 
     unless assigns[:value] do
-      raise "expected :value assign for menu button component"
+      raise "expected :value assign for toggle_input component"
     end
 
     unless assigns[:dark_theme] do
-      raise "expected :dark_theme assign for menu button component"
+      raise "expected :dark_theme assign for toggle_input component"
+    end
+
+    unless assigns[:sr_text] do
+      raise "expected :sr_text assign for toggle_input component"
     end
 
     ~H"""
@@ -41,7 +45,7 @@ defmodule WeDleWeb.Components.Form do
         }
       >
         <%= hidden_input(@form, @field) %>
-        <span class="sr-only">Use setting</span>
+        <span class="sr-only"><%= @sr_text %></span>
         <!-- Enabled: "translate-x-5", Not Enabled: "translate-x-0" -->
         <span
           aria-hidden="true"

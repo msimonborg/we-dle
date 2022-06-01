@@ -44,6 +44,7 @@ defmodule WeDleWeb.Components.App do
                   id="open-main-menu-button"
                   sr_text="Open Main Menu"
                   dark_theme={@dark_theme}
+                  :aria-expanded="mainMenuOpen"
                   @click="mainMenuOpen = ! mainMenuOpen"
                 >
                   <Components.Icons.solid_menu class="h-7 w-7" />
@@ -53,10 +54,12 @@ defmodule WeDleWeb.Components.App do
                   id="open-help-menu-button"
                   sr_text="Open Help Menu"
                   dark_theme={@dark_theme}
+                  :aria-expanded="false"
                 >
                   <Components.Icons.solid_question_mark_circle class="h-7 w-7" />
                 </Components.Buttons.menu_button>
               </div>
+              <!-- Logo -->
               <div x-data="{bounce: false}" id="logo" class="flex">
                 <div
                   @click="bounce = ! bounce"
@@ -74,6 +77,7 @@ defmodule WeDleWeb.Components.App do
                   id="open-stats-menu-button"
                   sr_text="Open Stats Menu"
                   dark_theme={@dark_theme}
+                  :aria-expanded="false"
                 >
                   <Components.Icons.solid_chart_bar class="h-7 w-7" />
                 </Components.Buttons.menu_button>
@@ -82,6 +86,7 @@ defmodule WeDleWeb.Components.App do
                   id="open-settings-menu-button"
                   sr_text="Open Settings Menu"
                   dark_theme={@dark_theme}
+                  :aria-expanded="settingsOpen"
                   @click="settingsOpen = ! settingsOpen"
                 >
                   <Components.Icons.solid_cog class="h-7 w-7" />
@@ -94,10 +99,10 @@ defmodule WeDleWeb.Components.App do
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
           <main>
             <div id="main-menu">
-              <Components.Menus.main_menu x_data_var="mainMenuOpen" {assigns} />
+              <Components.Menus.main_menu open_state="mainMenuOpen" {assigns} />
             </div>
             <div id="settings">
-              <Components.Menus.settings x_data_var="settingsOpen" {assigns} />
+              <Components.Menus.settings open_state="settingsOpen" {assigns} />
             </div>
             <%= render_slot(@inner_block) %>
           </main>

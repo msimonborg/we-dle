@@ -26,7 +26,6 @@ defmodule WeDleWeb.Components.Buttons do
       type="button"
       class={"bg-transparent p-1 #{text_color(@dark_theme)}"}
       id={@id}
-      aria-expanded="false"
       aria-haspopup="true"
       {@extras}
     >

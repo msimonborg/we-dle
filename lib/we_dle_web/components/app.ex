@@ -93,10 +93,10 @@ defmodule WeDleWeb.Components.App do
 
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
           <main>
-            <div phx-update="ignore" id="main-menu">
+            <div id="main-menu">
               <Components.Menus.main_menu x_data_var="mainMenuOpen" {assigns} />
             </div>
-            <div phx-update="ignore" id="settings">
+            <div id="settings">
               <Components.Menus.settings x_data_var="settingsOpen" {assigns} />
             </div>
             <%= render_slot(@inner_block) %>

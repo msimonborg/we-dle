@@ -14,6 +14,7 @@ defmodule WeDleWeb.Components.Menus do
       <div class="fixed overflow-hidden">
         <div class="absolute overflow-hidden">
           <div
+            x-cloak
             x-show={@x_data_var}
             x-transition:enter="transform transition ease-in-out duration-500"
             x-transition:enter-start="-translate-x-full"
@@ -137,7 +138,9 @@ defmodule WeDleWeb.Components.Menus do
     <div class="relative z-10" aria-labelledby="settings" role="dialog" aria-modal="true">
       <!-- Background backdrop, show/hide based on modal state. -->
       <div
+        x-cloak
         x-show={@x_data_var}
+        @click.away={"#{@x_data_var} = false"}
         x-transition:enter="ease-out duration-300"
         x-transition:enter-start="opacity-0"
         x-transition:enter-end="opacity-100"
@@ -152,7 +155,9 @@ defmodule WeDleWeb.Components.Menus do
         <div class="flex items-end sm:items-center justify-center min-h-full p-4 text-center sm:p-0">
           <!-- Modal panel, show/hide based on modal state. -->
           <div
+            x-cloak
             x-show={@x_data_var}
+            @click.away={"#{@x_data_var} = false"}
             x-transition:enter="ease-out duration-300"
             x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
             x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"

@@ -58,7 +58,8 @@ defmodule WeDle.MixProject do
       {:swoosh, "~> 1.4"},
       {:tailwind, "~> 0.1", runtime: Mix.env() == :dev},
       {:telemetry_metrics, "~> 0.6"},
-      {:telemetry_poller, "~> 1.0"}
+      {:telemetry_poller, "~> 1.0"},
+      {:wallaby, "~> 0.29.0", runtime: false, only: :test}
     ]
   end
 

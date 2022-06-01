@@ -32,15 +32,15 @@ defmodule WeDleWeb.Components.Form do
 
     ~H"""
     <div x-data={"{value: #{@value}}"} class="ml-3 flex items-center h-5">
-      <!-- Enabled: "bg-indigo-600", Not Enabled: "bg-gray-200" -->
+      <!-- Enabled: "bg-green-600", Not Enabled: "bg-zinc-400" -->
       <button
-        aria-checked={!(@value == 0)}
+        aria-checked={"#{@value == 1}"}
         type="input"
         name={"#{@form.id}[#{@field}]"}
         form={@form.id}
         phx-click={"change_#{@field}"}
         class={
-          if(@value == 0, do: "bg-zinc-400", else: "bg-amber-600") <>
+          if(@value == 1, do: "bg-green-600", else: "bg-zinc-400") <>
             " relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
         }
       >

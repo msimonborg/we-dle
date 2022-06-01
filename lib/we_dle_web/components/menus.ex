@@ -140,7 +140,6 @@ defmodule WeDleWeb.Components.Menus do
       <div
         x-cloak
         x-show={@x_data_var}
-        @click.away={"#{@x_data_var} = false"}
         x-transition:enter="ease-out duration-300"
         x-transition:enter-start="opacity-0"
         x-transition:enter-end="opacity-100"
@@ -151,13 +150,12 @@ defmodule WeDleWeb.Components.Menus do
       >
       </div>
 
-      <div class="fixed z-10 inset-x-0 top-0 overflow-y-auto">
-        <div class="flex items-end sm:items-center justify-center min-h-full p-4 text-center sm:p-0">
+      <div class="fixed z-10 inset-x-0 top-2 overflow-y-auto">
+        <div class="flex items-end sm:items-center justify-center min-h-full text-center">
           <!-- Modal panel, show/hide based on modal state. -->
           <div
             x-cloak
             x-show={@x_data_var}
-            @click.away={"#{@x_data_var} = false"}
             x-transition:enter="ease-out duration-300"
             x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
             x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
@@ -165,7 +163,7 @@ defmodule WeDleWeb.Components.Menus do
             x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
             x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
             class={
-              "relative #{background_color(@dark_theme)} px-4 pt-5 pb-4 text-left overflow-hidden transform transition-all sm:my-8 sm:max-w-lg sm:w-full sm:p-6"
+              "relative #{background_color(@dark_theme)} px-4 pt-5 pb-4 text-left overflow-hidden transform transition-all max-w-md w-full p-6"
             }
           >
             <div class="block absolute top-0 right-0 pt-4 pr-4">
@@ -187,21 +185,21 @@ defmodule WeDleWeb.Components.Menus do
                 <h2 class={"text-lg font-bold #{text_color(@dark_theme)}"}>SETTINGS</h2>
               </div>
               <div class={"divide-y #{divide_color(@dark_theme)}"}>
-                <Components.Form.toggle_input
+                <.settings_menu_input
                   form={f}
                   field={:hard_mode}
                   label="Hard Mode"
                   value={@hard_mode}
                   {assigns}
                 />
-                <Components.Form.toggle_input
+                <.settings_menu_input
                   form={f}
                   field={:dark_theme}
                   label="Dark Theme"
                   value={@dark_theme}
                   {assigns}
                 />
-                <Components.Form.toggle_input
+                <.settings_menu_input
                   form={f}
                   field={:high_contrast}
                   label="High Contrast Mode"
@@ -209,10 +207,10 @@ defmodule WeDleWeb.Components.Menus do
                   {assigns}
                 />
               </div>
-              <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
+              <div class="mt-5">
                 <button
                   type="submit"
-                  class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:w-auto sm:text-sm"
+                  class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                 >
                   Save Settings
                 </button>
@@ -221,6 +219,23 @@ defmodule WeDleWeb.Components.Menus do
           </div>
         </div>
       </div>
+    </div>
+    """
+  end
+
+  defp settings_menu_input(assigns) do
+    ~H"""
+    <div class="relative flex items-start py-6">
+      <div class={"min-w-0 flex-1 #{text_color(@dark_theme)} text-sm font-medium text-lg"}>
+        <%= label(@form, @field, @label) %>
+      </div>
+      <Components.Form.toggle_input
+        form={@form}
+        field={@field}
+        label={@label}
+        value={@value}
+        {assigns}
+      />
     </div>
     """
   end

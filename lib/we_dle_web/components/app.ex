@@ -63,9 +63,9 @@ defmodule WeDleWeb.Components.App do
                   :class="bounce && 'animate-bounce'"
                   class="flex-shrink-0 flex items-center"
                 >
-                  <p class={"font-serif font-bold text-4xl #{text_color(@dark_theme)}"}>
+                  <span class={"font-serif font-bold text-4xl #{text_color(@dark_theme)}"}>
                     we-dle
-                  </p>
+                  </span>
                 </div>
               </div>
               <div class="flex items-center">

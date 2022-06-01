@@ -28,4 +28,19 @@ defmodule WeDleWeb.GameLive.Show do
      |> assign(Map.from_struct(settings))
      |> assign(:settings_changeset, settings_changeset)}
   end
+
+  @impl true
+  def handle_event("change_" <> setting, _, %{assigns: assigns} = socket) do
+    setting = String.to_existing_atom(setting)
+    value = if Map.get(assigns, setting) == 0, do: 1, else: 0
+
+    settings_changeset = Settings.changeset(assigns.settings_changeset, %{setting => value})
+
+    socket =
+      socket
+      |> assign(:settings_changeset, settings_changeset)
+      |> assign(setting, value)
+
+    {:noreply, socket}
+  end
 end

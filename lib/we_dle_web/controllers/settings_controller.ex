@@ -30,9 +30,14 @@ defmodule WeDleWeb.SettingsController do
       |> put_session(:settings, settings)
       |> html("ok")
     else
+      errors =
+        changeset.errors
+        |> Enum.map(fn {field, {reason, _}} -> "#{field} #{reason}" end)
+        |> Enum.join(", ")
+
       conn
       |> put_status(:unprocessable_entity)
-      |> html("error: invalid settings")
+      |> html("errors: #{errors}")
     end
   end
 

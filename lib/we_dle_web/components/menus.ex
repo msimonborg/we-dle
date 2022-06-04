@@ -175,37 +175,32 @@ defmodule WeDleWeb.Components.Menus do
                 <Components.Icons.outline_x />
               </Components.Buttons.menu_button>
             </div>
-            <.form let={f} for={:settings} action="#">
-              <div class="flex justify-center">
-                <h2 class={"text-lg font-bold #{text_color(@dark_theme)}"}>SETTINGS</h2>
-              </div>
-              <div class={"divide-y #{divide_color(@dark_theme)}"}>
-                <.settings_menu_input
-                  form={f}
-                  field={:hard_mode}
-                  label="Hard Mode"
-                  value={@hard_mode}
-                  sr_text="Toggle Hard Mode"
-                  {assigns}
-                />
-                <.settings_menu_input
-                  form={f}
-                  field={:dark_theme}
-                  label="Dark Theme"
-                  value={@dark_theme}
-                  sr_text="Toggle Dark Theme"
-                  {assigns}
-                />
-                <.settings_menu_input
-                  form={f}
-                  field={:high_contrast}
-                  label="High Contrast Mode"
-                  value={@high_contrast}
-                  sr_text="Toggle High Contrast Mode"
-                  {assigns}
-                />
-              </div>
-            </.form>
+            <div class="flex justify-center">
+              <h2 class={"text-lg font-bold #{text_color(@dark_theme)}"}>SETTINGS</h2>
+            </div>
+            <div class={"divide-y #{divide_color(@dark_theme)}"}>
+              <.settings_menu_input
+                field={:hard_mode}
+                label="Hard Mode"
+                value={@hard_mode}
+                sr_text="Toggle Hard Mode"
+                {assigns}
+              />
+              <.settings_menu_input
+                field={:dark_theme}
+                label="Dark Theme"
+                value={@dark_theme}
+                sr_text="Toggle Dark Theme"
+                {assigns}
+              />
+              <.settings_menu_input
+                field={:high_contrast}
+                label="High Contrast Mode"
+                value={@high_contrast}
+                sr_text="Toggle High Contrast Mode"
+                {assigns}
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -217,15 +212,9 @@ defmodule WeDleWeb.Components.Menus do
     ~H"""
     <div class="relative flex items-start py-6">
       <div class={"min-w-0 flex-1 #{text_color(@dark_theme)} text-sm font-medium text-lg"}>
-        <%= label(@form, @field, @label) %>
+        <p><%= @label %></p>
       </div>
-      <Components.Form.toggle_input
-        form={@form}
-        field={@field}
-        label={@label}
-        value={@value}
-        {assigns}
-      />
+      <Components.Buttons.toggle_button field={@field} value={@value} {assigns} />
     </div>
     """
   end

@@ -15,33 +15,31 @@ defmodule WeDleWeb.SettingsControllerTest do
   end
 
   test "stores valid settings as a Settings struct in the session", %{conn: conn} do
-    return_to = "/"
     settings = Settings.new(dark_theme: 1)
-    params = %{settings: Map.from_struct(settings), return_to: return_to}
+    params = Map.from_struct(settings)
 
     conn =
       conn
-      |> post(Routes.settings_path(conn, :index), params)
+      |> get(Routes.settings_path(conn, :index), params)
       |> fetch_cookies(signed: [@cookie])
       |> fetch_session()
 
-    assert redirected_to(conn) == "/"
+    assert html_response(conn, 200) =~ "ok"
     assert conn.cookies[@cookie] == settings
     assert get_session(conn, "settings") == settings
   end
 
   test "will not store settings when they are invalid", %{conn: conn} do
-    return_to = "/"
     settings = Settings.new(dark_theme: true)
-    params = %{settings: Map.from_struct(settings), return_to: return_to}
+    params = Map.from_struct(settings)
 
     conn =
       conn
-      |> post(Routes.settings_path(conn, :index), params)
+      |> get(Routes.settings_path(conn, :index), params)
       |> fetch_cookies(signed: [@cookie])
       |> fetch_session()
 
-    assert redirected_to(conn) == "/"
+    assert html_response(conn, 422) =~ "errors"
     assert conn.cookies[@cookie] != settings
     assert get_session(conn, "settings") != settings
   end

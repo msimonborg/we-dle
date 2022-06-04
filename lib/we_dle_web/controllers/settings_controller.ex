@@ -31,9 +31,9 @@ defmodule WeDleWeb.SettingsController do
       |> html("ok")
     else
       errors =
-        changeset.errors
-        |> Enum.map(fn {field, {reason, _}} -> "#{field} #{reason}" end)
-        |> Enum.join(", ")
+        Enum.map_join(changeset.errors, ", ", fn {field, {reason, _}} ->
+          "#{field} #{reason}"
+        end)
 
       conn
       |> put_status(:unprocessable_entity)

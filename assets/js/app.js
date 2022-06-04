@@ -47,3 +47,11 @@ liveSocket.connect()
 // >> liveSocket.disableLatencySim()
 window.liveSocket = liveSocket
 
+window.addEventListener(`phx:save-settings`, (event) => {
+  let uri = event.detail.uri
+  let frame = document.createElement("iframe");
+  frame.setAttribute("src", uri);
+  frame.style.visibility = 'visible';
+  frame.style.display = 'none';
+  document.body.appendChild(frame);
+});

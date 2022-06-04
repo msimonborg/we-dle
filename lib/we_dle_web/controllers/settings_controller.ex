@@ -14,7 +14,7 @@ defmodule WeDleWeb.SettingsController do
   @cookie "_we_dle_web_settings"
   @cookie_options [sign: true, max_age: @max_age, same_site: "Lax"]
 
-  def index(conn, %{"settings" => settings_params, "return_to" => return_to}) do
+  def index(conn, %{"settings" => settings_params}) do
     settings =
       conn
       |> fetch_session()
@@ -28,13 +28,9 @@ defmodule WeDleWeb.SettingsController do
       conn
       |> put_resp_cookie(@cookie, settings, @cookie_options)
       |> put_session(:settings, settings)
-      |> redirect(to: return_to)
+      |> html("ok")
     else
-      {field, {error, _}} = List.first(changeset.errors)
-
-      conn
-      |> put_flash(:error, "#{field |> to_string() |> String.capitalize()} #{error}.")
-      |> redirect(to: return_to)
+      html(conn, "error")
     end
   end
 

@@ -5,8 +5,6 @@ defmodule WeDleWeb.GameLive.Show do
 
   use WeDleWeb, :live_view
 
-  alias WeDleWeb.Settings
-
   @impl true
   def render(assigns) do
     ~H"""
@@ -19,27 +17,24 @@ defmodule WeDleWeb.GameLive.Show do
     game_id = Map.fetch!(session, "game_id")
     settings = Map.fetch!(session, "settings")
     current_user = Map.fetch!(session, "current_user")
-    settings_changeset = Settings.changeset(settings, %{})
 
     {:ok,
      socket
      |> assign(:game_id, game_id)
      |> assign(:current_user, current_user)
-     |> assign(Map.from_struct(settings))
-     |> assign(:settings_changeset, settings_changeset)}
+     |> assign(Map.from_struct(settings))}
   end
 
   @impl true
   def handle_event("change_" <> setting, _, %{assigns: assigns} = socket) do
     setting = String.to_existing_atom(setting)
     value = if Map.get(assigns, setting) == 0, do: 1, else: 0
-
-    settings_changeset = Settings.changeset(assigns.settings_changeset, %{setting => value})
+    params = %{setting => value}
 
     socket =
       socket
-      |> assign(:settings_changeset, settings_changeset)
       |> assign(setting, value)
+      |> push_event("save-settings", %{uri: Routes.settings_path(socket, :index, params)})
 
     {:noreply, socket}
   end

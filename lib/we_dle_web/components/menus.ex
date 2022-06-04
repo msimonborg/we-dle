@@ -175,11 +175,7 @@ defmodule WeDleWeb.Components.Menus do
                 <Components.Icons.outline_x />
               </Components.Buttons.menu_button>
             </div>
-            <.form
-              let={f}
-              for={@settings_changeset}
-              action={Routes.settings_path(@socket, :index, return_to: "/")}
-            >
+            <.form let={f} for={:settings} action="#">
               <div class="flex justify-center">
                 <h2 class={"text-lg font-bold #{text_color(@dark_theme)}"}>SETTINGS</h2>
               </div>
@@ -208,14 +204,6 @@ defmodule WeDleWeb.Components.Menus do
                   sr_text="Toggle High Contrast Mode"
                   {assigns}
                 />
-              </div>
-              <div class="mt-5">
-                <button
-                  type="submit"
-                  class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                >
-                  Save Settings
-                </button>
               </div>
             </.form>
           </div>

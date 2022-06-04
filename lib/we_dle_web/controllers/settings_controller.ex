@@ -14,7 +14,7 @@ defmodule WeDleWeb.SettingsController do
   @cookie "_we_dle_web_settings"
   @cookie_options [sign: true, max_age: @max_age, same_site: "Lax"]
 
-  def index(conn, %{"settings" => settings_params}) do
+  def index(conn, settings_params) do
     settings =
       conn
       |> fetch_session()
@@ -30,7 +30,9 @@ defmodule WeDleWeb.SettingsController do
       |> put_session(:settings, settings)
       |> html("ok")
     else
-      html(conn, "error")
+      conn
+      |> put_status(:unprocessable_entity)
+      |> html("error: invalid settings")
     end
   end
 

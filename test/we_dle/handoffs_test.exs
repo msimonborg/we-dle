@@ -3,7 +3,7 @@ defmodule WeDle.HandoffsTest do
 
   import WeDle.Handoffs
 
-  alias WeDle.{Game, Game.Board, Game.Player, Schemas.Handoff}
+  alias WeDle.{Game, Game.Board, Game.Handoff, Game.Player}
 
   setup :build_game
 

@@ -12,9 +12,9 @@ defmodule WeDle.Game.Server do
     Game,
     Game.Board,
     Game.DistributedRegistry,
+    Game.Handoff,
     Game.Player,
-    Handoffs,
-    Schemas.Handoff
+    Handoffs
   }
 
   alias WeDle.Game.Handoff.Registry, as: HandoffRegistry

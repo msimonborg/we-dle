@@ -6,10 +6,10 @@ defmodule WeDle.Handoffs do
 
   import Ecto.Query
 
-  alias WeDle.{Game, Repo, Schemas.Handoff}
+  alias WeDle.{Game, Game.Handoff, Repo}
 
   @type game_id :: String.t()
-  @type handoff :: %WeDle.Schemas.Handoff{}
+  @type handoff :: %Handoff{}
   @type game :: Game.t()
 
   @doc """

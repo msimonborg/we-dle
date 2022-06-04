@@ -4,7 +4,7 @@ defmodule WeDle.Game.HandoffTest do
   import WeDle.Game
 
   alias Ecto.Adapters.SQL.Sandbox
-  alias WeDle.{Game, Game.Board, Game.Player, Handoffs, Repo, Schemas.Handoff}
+  alias WeDle.{Game, Game.Board, Game.Handoff, Game.Player, Handoffs, Repo}
 
   setup do
     # Our Postgres notification doesn't trigger inside of a sandbox,

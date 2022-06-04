@@ -1,4 +1,4 @@
-defmodule WeDle.Schemas.Handoff do
+defmodule WeDle.Game.Handoff do
   @moduledoc """
   The database schema for the `handoffs` table.
   """

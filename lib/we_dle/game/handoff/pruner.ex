@@ -8,7 +8,7 @@ defmodule WeDle.Game.Handoff.Pruner do
 
   require Logger
 
-  alias WeDle.{Handoffs, Schemas.Handoff}
+  alias WeDle.{Game.Handoff, Handoffs}
 
   defstruct node_status: :alive
 

@@ -10,13 +10,13 @@ defmodule WeDle.Game do
     DistributedRegistry,
     EdgeServer,
     EdgeSupervisor,
+    Handoff,
     Player,
     Server,
     ServerSupervisor
   }
 
   alias WeDle.Handoffs
-  alias WeDle.Schemas.Handoff
 
   defstruct [:id, :word_length, :started_at, :winner, players: %{}, edge_servers: %{}]
 

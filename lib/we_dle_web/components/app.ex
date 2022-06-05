@@ -109,6 +109,10 @@ defmodule WeDleWeb.Components.App do
         </div>
       </div>
     </div>
+    <!-- This iframe provides a target for hidden form submissions and HTTP requests -->
+    <!-- that mutate the session state. -->
+    <iframe hidden name="hidden_iframe" src={Routes.iframe_path(@socket, :index)} height="0" width="0">
+    </iframe>
     """
   end
 end

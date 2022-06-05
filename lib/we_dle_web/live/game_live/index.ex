@@ -27,13 +27,7 @@ defmodule WeDleWeb.GameLive.Index do
   def handle_event("change_" <> setting, _, %{assigns: assigns} = socket) do
     setting = String.to_existing_atom(setting)
     value = if Map.get(assigns, setting) == 0, do: 1, else: 0
-    params = %{setting => value}
 
-    socket =
-      socket
-      |> assign(setting, value)
-      |> push_event("save-settings", %{uri: Routes.settings_path(socket, :index, params)})
-
-    {:noreply, socket}
+    {:noreply, assign(socket, setting, value)}
   end
 end

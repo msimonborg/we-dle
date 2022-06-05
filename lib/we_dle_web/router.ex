@@ -96,7 +96,8 @@ defmodule WeDleWeb.Router do
   scope "/", WeDleWeb do
     pipe_through :browser
 
-    get "/settings", SettingsController, :index
+    get "/iframe", IframeController, :index
+    put "/settings", SettingsController, :update
 
     get "/", GameController, :index
     # This route must go last or /:game_id always matches any single-nested path

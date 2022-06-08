@@ -188,10 +188,10 @@ defmodule WeDle.Game.EdgeServer do
       ^game_monitor ->
         pid = state.client_pid
         if pid && Process.alive?(pid), do: send(pid, {:game_down, reason})
-        {:stop, reason, %{state | game_pid: nil, game_monitor: nil}}
+        {:stop, :normal, %{state | game_pid: nil, game_monitor: nil}}
 
       ^client_monitor ->
-        {:stop, reason, %{state | client_pid: nil, client_monitor: nil}}
+        {:stop, :normal, %{state | client_pid: nil, client_monitor: nil}}
     end
   end
 

@@ -44,6 +44,7 @@ defmodule WeDle.Game.Supervisor do
       {PartitionSupervisor, child_spec: Game.ServerSupervisor, name: Game.ServerSupervisors},
       {Registry, keys: :unique, name: Game.EdgeRegistry, partitions: System.schedulers_online()},
       {PartitionSupervisor, child_spec: Game.EdgeSupervisor, name: Game.EdgeSupervisors},
+      Game.PlayerCounter,
       {Game.ShutdownSignal, subscribers: shutdown_subscribers()}
     ]
 

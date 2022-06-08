@@ -39,7 +39,7 @@ defmodule WeDle.Game.HandoffTest do
 
       Process.exit(game_pid, :shutdown)
 
-      Process.sleep(10)
+      Process.sleep(20)
 
       assert whereis(game) |> is_nil()
 

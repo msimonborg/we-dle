@@ -23,7 +23,7 @@ defmodule WeDle.Game.PlayerCounter do
   @enforce_keys [:global_count, :node_counts]
   defstruct [:global_count, :node_counts]
 
-  @type t :: %__MODULE__{node_counts: %{atom => non_neg_integer}}
+  @type t :: %__MODULE__{global_count: non_neg_integer, node_counts: %{atom => non_neg_integer}}
 
   @ets_name __MODULE__
   @interval :timer.seconds(5)

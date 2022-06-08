@@ -6,21 +6,26 @@ defmodule WeDle.Game.Supervisor do
     * `WeDle.Game.Handoff.Supervisor` supervises processes responsible
     for game state handoff
 
-    * `Wedle.Game.DistributedRegistry` to register and lookup
+    * `Wedle.Game.DistributedRegistry` registers and provides lookup for
     `WeDle.Game.Server` processes across the cluster
 
-    * `WeDle.Game.DistributedSupervisor` and to start and supervise
-    `WeDle.Game.Server`s across the cluster
+    * `WeDle.Game.NodeListener` keeps cluster membership up to date for
+    the `WeDle.Game.DistributedRegistry`
 
-    * `WeDle.Game.NodeListener` to keep cluster membership up to date
+    * `WeDle.Game.ServerSupervisors`, a `PartitionSupervisor` that pools
+    `WeDle.Game.ServerSupervisor`s to supervise game processes
 
-    * `WeDle.Game.EdgeRegistry` to register local `WeDle.Game.EdgeServer`s
+    * `WeDle.Game.EdgeRegistry` registers local `WeDle.Game.EdgeServer`s
 
-    * `WeDle.Game.EdgeSupervisor` to start and supervise
+    * `WeDle.Game.EdgeSupervisors`, a `PartitionSupervisor` that pools
+    `WeDle.Game.EdgeSupervisor`s to start and supervise
     `WeDle.Game.EdgeServer`s locally on the same node as the player
 
+    * `WeDle.Game.PlayerCounter` aggregates and broadcasts cluster-wide
+    player counts
+
     * `WeDle.Game.ShutdownSignal` sends an early shutdown warning to
-    interested processes
+    subscribing processes
   """
 
   use Supervisor

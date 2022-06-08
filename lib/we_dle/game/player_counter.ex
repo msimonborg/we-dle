@@ -23,7 +23,10 @@ defmodule WeDle.Game.PlayerCounter do
   @enforce_keys [:global_count, :node_counts]
   defstruct [:global_count, :node_counts]
 
-  @type t :: %__MODULE__{global_count: non_neg_integer, node_counts: %{atom => non_neg_integer}}
+  @type t :: %__MODULE__{
+          global_count: non_neg_integer,
+          node_counts: %{optional(atom) => non_neg_integer}
+        }
 
   @ets_name __MODULE__
   @interval :timer.seconds(5)
@@ -41,8 +44,8 @@ defmodule WeDle.Game.PlayerCounter do
   Get the current global player count.
 
   Counts are eventually consistent and updated on a sync interval of
-  five seconds. The value is read from an ETS table with read
-  concurrency enabled.
+  five seconds. The value is read from an ETS table with
+  `:read_concurrency` enabled.
   """
   @spec get :: non_neg_integer
   def get do
@@ -53,8 +56,9 @@ defmodule WeDle.Game.PlayerCounter do
   Subscribe to the `"player_counter"` pubsub topic to receive an
   update broadcast every five seconds.
 
-  Broadcast messages are in the shape of
-  `{"player_counter", count :: non_neg_integer}`.
+  Broadcasts are only sent when the count has changed since the
+  last broadcast. Broadcast messages are in the shape of
+  `{"player_counter", count :: non_neg_integer()}`.
   """
   @spec subscribe :: :ok | {:error, term}
   def subscribe do

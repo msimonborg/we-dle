@@ -166,16 +166,17 @@ defmodule WeDle.Game.Server do
     end
   end
 
-  def handle_info({:DOWN, ref, _, _, _}, %{edge_servers: edge_servers} = game) do
-    Process.demonitor(ref, [:flush])
+  def handle_info({:DOWN, ref, _, _, _}, %{edge_servers: edge_servers} = game)
+      when map_size(edge_servers) <= 1 do
+    {:noreply, demonitor_edge(ref, game), _timeout = 10_000}
+  end
 
-    game =
-      case Enum.find(edge_servers, fn {_, edge} -> edge.ref == ref end) do
-        {player_id, _} -> %{game | edge_servers: Map.delete(edge_servers, player_id)}
-        nil -> game
-      end
+  def handle_info({:DOWN, ref, _, _, _}, game) do
+    {:noreply, demonitor_edge(ref, game)}
+  end
 
-    {:noreply, game}
+  def handle_info(:timeout, game) do
+    {:stop, {:shutdown, :timeout}, game}
   end
 
   def handle_info({:EXIT, _, reason}, game) do
@@ -196,15 +197,30 @@ defmodule WeDle.Game.Server do
     {:noreply, game}
   end
 
+  defp demonitor_edge(ref, %{edge_servers: edge_servers} = game) do
+    Process.demonitor(ref, [:flush])
+
+    case Enum.find(edge_servers, fn {_, edge} -> edge.ref == ref end) do
+      {player_id, _} -> %{game | edge_servers: Map.delete(edge_servers, player_id)}
+      nil -> game
+    end
+  end
+
   @impl true
+
+  def terminate(:reset, game) do
+    Logger.debug("game with ID: \"#{game.id}\" resetting")
+    :ok
+  end
+
   def terminate({:shutdown, :expired}, game) do
     Logger.debug("game with ID: \"#{game.id}\" expiring")
     :ok
   end
 
-  def terminate(:reset, game) do
-    Logger.debug("game with ID: \"#{game.id}\" resetting")
-    :ok
+  def terminate({:shutdown, :timeout}, game) do
+    Logger.debug("game with ID: \"#{game.id}\" timed out with no connected players")
+    terminate(:shutdown, game)
   end
 
   def terminate(_, game) do

@@ -216,6 +216,70 @@ defmodule WeDle.Game do
   end
 
   @doc """
+  Forces a game to expire and bypass a handoff, blocking until
+  `Process.alive/1` returns `false`.
+
+  This function guarantees that `exists?/1` will return false
+  after it returns.
+
+  ## Examples
+
+      iex> WeDle.Game.start_or_join("expire", "p1")
+      iex> WeDle.Game.force_expire("expire")
+      :ok
+      iex> WeDle.Game.exists?("expire")
+      false
+      iex> WeDle.Game.force_expire("expire")
+      {:error, :game_not_found}
+  """
+  @spec force_expire(id) :: :ok
+  def force_expire(game_id) do
+    case whereis(game_id) do
+      pid when is_pid(pid) ->
+        send(pid, :expire)
+        :ok = block_until_expired(pid)
+
+      _ ->
+        {:error, :game_not_found}
+    end
+  end
+
+  defp block_until_expired(pid) do
+    if Process.alive?(pid), do: block_until_expired(pid), else: :ok
+  end
+
+  @doc """
+  Restarts the game, resetting to a fresh state.
+
+  The expiration timer is also reset.
+
+  Returns `:ok` if the game exists, otherwise
+  `{:error, :game_not_found}`.
+
+  ## Examples
+
+      iex> {:ok, _} = WeDle.Game.start_or_join("reset", "p1")
+      iex> WeDle.Game.reset("reset")
+      :ok
+
+      iex> WeDle.Game.reset("noreset")
+      {:error, :game_not_found}
+  """
+  @spec reset(id) :: {:ok, t} | {:error, :game_not_found}
+  def reset(game_id) do
+    case whereis(game_id) do
+      pid when is_pid(pid) ->
+        :ok =
+          game_id
+          |> name()
+          |> GenServer.call(:reset)
+
+      _ ->
+        {:error, :game_not_found}
+    end
+  end
+
+  @doc """
   Returns a `Game` struct from a `Handoff` struct.
   """
   def game_from_handoff(%Handoff{} = handoff) do

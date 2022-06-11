@@ -108,9 +108,16 @@ defmodule WeDle.Game.Server do
     do_join_game(game, player_id, player, opponent, pid)
   end
 
+  def handle_call(:reset, _, game) do
+    {:stop, :reset, :ok, reset(game)}
+  end
+
+  defp reset(%{id: game_id, word_length: word_length}) do
+    %Game{id: game_id, word_length: word_length, started_at: DateTime.utc_now()}
+  end
+
   @impl true
   def handle_info(:expire, game) do
-    Logger.debug("game with ID: \"#{game.id}\" expiring")
     {:stop, {:shutdown, :expired}, game}
   end
 
@@ -192,6 +199,11 @@ defmodule WeDle.Game.Server do
   @impl true
   def terminate({:shutdown, :expired}, game) do
     Logger.debug("game with ID: \"#{game.id}\" expiring")
+    :ok
+  end
+
+  def terminate(:reset, game) do
+    Logger.debug("game with ID: \"#{game.id}\" resetting")
     :ok
   end
 

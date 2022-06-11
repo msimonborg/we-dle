@@ -40,7 +40,7 @@ defmodule WeDle.GameTest do
       pid = whereis(game)
 
       Process.exit(pid, :shutdown)
-      Process.sleep(10)
+      Process.sleep(20)
 
       assert game |> whereis() |> is_nil()
       assert exists?(game)

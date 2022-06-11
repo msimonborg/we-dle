@@ -217,7 +217,7 @@ defmodule WeDle.Game do
 
   @doc """
   Forces a game to expire and bypass a handoff, blocking until
-  `Process.alive/1` returns `false`.
+  `Process.alive?/1` returns `false`.
 
   This function guarantees that `exists?/1` will return false
   after it returns.

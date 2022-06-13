@@ -46,9 +46,9 @@ defmodule WeDle.Game.Supervisor do
       Game.Handoff.Supervisor,
       Game.DistributedRegistry,
       Game.NodeListener,
-      {PartitionSupervisor, child_spec: Game.ServerSupervisor, name: Game.ServerSupervisors},
+      {PartitionSupervisor, child_spec: server_sup_spec(), name: Game.ServerSupervisors},
       {Registry, keys: :unique, name: Game.EdgeRegistry, partitions: System.schedulers_online()},
-      {PartitionSupervisor, child_spec: Game.EdgeSupervisor, name: Game.EdgeSupervisors},
+      {PartitionSupervisor, child_spec: edge_sup_spec(), name: Game.EdgeSupervisors},
       Game.PlayerCounter,
       {Game.ShutdownSignal, subscribers: shutdown_subscribers()}
     ]
@@ -61,5 +61,13 @@ defmodule WeDle.Game.Supervisor do
       Game.Handoff.Listener,
       Game.Handoff.Pruner
     ]
+  end
+
+  defp server_sup_spec do
+    {DynamicSupervisor, strategy: :one_for_one, shutdown: 60_000}
+  end
+
+  defp edge_sup_spec do
+    {DynamicSupervisor, strategy: :one_for_one}
   end
 end

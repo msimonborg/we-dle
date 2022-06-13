@@ -9,11 +9,8 @@ defmodule WeDle.Game.EdgeServer do
 
   require Logger
 
-  alias WeDle.Game
-
   alias WeDle.Game.{
     Board,
-    DistributedRegistry,
     EdgeRegistry,
     Player
   }
@@ -23,14 +20,11 @@ defmodule WeDle.Game.EdgeServer do
     :player,
     :opponent,
     :game_id,
-    :game_name,
     :game_pid,
     :game_monitor,
-    :client_pid,
-    :client_monitor
+    clients: %{}
   ]
 
-  @type game_name :: {:via, Horde.Registry, {DistributedRegistry, String.t()}}
   @type name :: {:via, Registry, {EdgeRegistry, String.t()}}
   @type player :: Player.t()
   @type t :: %__MODULE__{
@@ -38,23 +32,31 @@ defmodule WeDle.Game.EdgeServer do
           player: player,
           opponent: player,
           game_id: String.t(),
-          game_name: game_name,
           game_pid: pid,
           game_monitor: reference,
-          client_pid: pid,
-          client_monitor: reference
+          clients: %{pid => reference}
         }
 
   # -- Client API --
 
+  @doc false
   def start_link(opts) do
-    game_id = Keyword.fetch!(opts, :game_id)
-    player_id = Keyword.fetch!(opts, :player_id)
-    client_pid = Keyword.fetch!(opts, :client_pid)
+    name = name(opts[:game_id], opts[:player_id])
+    GenServer.start_link(__MODULE__, opts, name: name)
+  end
 
-    GenServer.start_link(__MODULE__, {game_id, player_id, client_pid},
-      name: name(game_id, player_id)
-    )
+  @doc """
+  Starts a new supervised edge server.
+
+  The new server will be registered under a name associated to the given
+  `game_id` and `player_id`.
+  """
+  def start_edge(game_pid, game_id, player_id)
+      when is_pid(game_pid) and is_binary(game_id) and is_binary(player_id) do
+    opts = [game_pid: game_pid, game_id: game_id, player_id: player_id, client_pid: self()]
+    sup_name = {:via, PartitionSupervisor, {WeDle.Game.EdgeSupervisors, self()}}
+
+    DynamicSupervisor.start_child(sup_name, {__MODULE__, opts})
   end
 
   @doc """
@@ -73,9 +75,11 @@ defmodule WeDle.Game.EdgeServer do
   processes on the local node.
   """
   @spec name(String.t(), String.t()) :: name
-  def name(game_id, player_id) do
-    {:via, Registry, {EdgeRegistry, "#{player_id}@#{game_id}"}}
+  def name(game_id, player_id) when is_binary(game_id) and is_binary(player_id) do
+    {:via, Registry, {EdgeRegistry, id(game_id, player_id)}}
   end
+
+  defp id(game_id, player_id), do: "#{player_id}@#{game_id}"
 
   @doc """
   Returns the `pid` of the edge server for the given `player`.
@@ -102,50 +106,48 @@ defmodule WeDle.Game.EdgeServer do
     |> GenServer.whereis()
   end
 
-  def join_game(pid, game_id, player_id) do
-    game_id
-    |> name(player_id)
-    |> GenServer.call({:join_game, pid})
-  end
-
   # -- Callbacks --
 
   @impl true
-  def init({game_id, player_id, client_pid}) do
-    game_name = game_name(game_id)
-    game_pid = GenServer.whereis(game_name)
-    game_monitor = Process.monitor(game_pid)
-    client_monitor = Process.monitor(client_pid)
+  def init(opts) do
+    Process.flag(:trap_exit, true)
+
+    game_pid = Keyword.fetch!(opts, :game_pid)
+    game_id = Keyword.fetch!(opts, :game_id)
+    player_id = Keyword.fetch!(opts, :player_id)
+    client_pid = Keyword.fetch!(opts, :client_pid)
 
     {:ok,
      struct!(__MODULE__,
-       game_name: game_name,
        game_id: game_id,
        game_pid: game_pid,
-       game_monitor: game_monitor,
+       game_monitor: Process.monitor(game_pid),
        player_id: player_id,
-       client_pid: client_pid,
-       client_monitor: client_monitor
+       clients: %{client_pid => Process.monitor(client_pid)}
      )}
   end
 
   @impl true
-  def handle_call({:join_game, game_pid}, {client_pid, _}, %{player_id: player_id} = state) do
+  def handle_call(:join_game, {client_pid, _}, state) do
+    %{player_id: player_id, game_pid: game_pid, clients: clients} = state
+
     case GenServer.call(game_pid, {:join_game, player_id}) do
       {:ok, %{player: player, opponent: opponent}} ->
-        state = %{state | player: player, opponent: opponent, client_pid: client_pid}
+        clients = Map.put_new_lazy(clients, client_pid, fn -> Process.monitor(client_pid) end)
+
+        state = %{state | player: player, opponent: opponent, clients: clients}
         {:reply, {:ok, player}, state}
 
       {:error, _} = error ->
-        {:stop, :normal, error, state}
+        {:stop, {:shutdown, error}, error, state}
     end
   end
 
-  def handle_call({:set_challenge, word}, _, %{player: player, game_id: game_id} = state) do
+  def handle_call({:set_challenge, word}, _, %{player: player, game_pid: game_pid} = state) do
     case ensure_challenge_not_set(player, word) do
       :ok ->
         player = %{player | challenge: word}
-        send_player_update_to_game(game_id, player)
+        send_player_update_to_game(game_pid, player)
         {:reply, {:ok, player}, %{state | player: player}}
 
       {:error, _} = error ->
@@ -161,7 +163,8 @@ defmodule WeDle.Game.EdgeServer do
     with :ok <- ensure_challenge_is_set(opponent),
          %Board{} = board <- Board.insert(player.board, word, opponent.challenge) do
       player = %{player | board: board}
-      send_player_update_to_game(state.game_id, player)
+      send_player_update_to_game(state.game_pid, player)
+
       {:reply, {:ok, player}, %{state | player: player}}
     else
       {:error, _} = error -> {:reply, error, state}
@@ -179,34 +182,46 @@ defmodule WeDle.Game.EdgeServer do
   end
 
   def handle_info(
-        {:DOWN, ref, _, _, reason},
-        %{game_monitor: game_monitor, client_monitor: client_monitor} = state
+        {:DOWN, ref, _, pid, reason},
+        %{game_monitor: game_monitor, clients: clients} = state
       ) do
     Process.demonitor(ref, [:flush])
 
     case ref do
       ^game_monitor ->
-        pid = state.client_pid
-        if pid && Process.alive?(pid), do: send(pid, {:game_down, reason})
-        {:stop, :normal, %{state | game_pid: nil, game_monitor: nil}}
+        message = {:game_down, reason}
+        for {pid, _} <- clients, do: send(pid, message)
+        {:stop, {:shutdown, message}, %{state | game_pid: nil, game_monitor: nil}}
 
-      ^client_monitor ->
-        {:stop, :normal, %{state | client_pid: nil, client_monitor: nil}}
+      _ ->
+        clients = Map.delete(clients, pid)
+        state = %{state | clients: clients}
+
+        if map_size(clients) == 0,
+          do: {:stop, {:shutdown, :no_clients}, state},
+          else: {:noreply, state}
     end
+  end
+
+  @impl true
+  def terminate({:shutdown, {:error, reason}}, state) do
+    Logger.error(shutdown_log_message(state, reason))
+  end
+
+  def terminate({:shutdown, reason}, state) do
+    Logger.debug(shutdown_log_message(state, reason))
+  end
+
+  defp shutdown_log_message(state, reason) do
+    """
+    edge server with ID "#{id(state.game_id, state.player_id)}" shutting down with reason: #{inspect(reason)}
+    """
   end
 
   # -- Private Helpers --
 
-  defp game_name(game_id) do
-    DistributedRegistry.via_tuple(game_id)
-  end
-
-  defp send_player_update_to_game(game_id, player) do
-    name = Game.name(game_id)
-
-    with pid when is_pid(pid) <- GenServer.whereis(name) do
-      send(pid, {:update_player, player})
-    end
+  defp send_player_update_to_game(game_pid, player) do
+    send(game_pid, {:update_player, player})
   end
 
   defp ensure_challenge_is_set(player) do

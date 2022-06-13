@@ -9,11 +9,9 @@ defmodule WeDle.Game do
     Board,
     DistributedRegistry,
     EdgeServer,
-    EdgeSupervisor,
     Handoff,
     Player,
-    Server,
-    ServerSupervisor
+    Server
   }
 
   alias WeDle.Handoffs
@@ -43,7 +41,8 @@ defmodule WeDle.Game do
   @doc """
   Starts a new game.
 
-  Returns `{:ok, pid}` on success, or `:ignore` if the game is already started.
+  Returns `{:ok, pid}` on success, or `{:error, {:already_started, pid}}`
+  if the game is already started.
 
   ## Options
 
@@ -56,19 +55,21 @@ defmodule WeDle.Game do
       iex> is_pid(pid)
       true
 
-      iex> {:ok, _pid} = WeDle.Game.start("other_game")
+      iex> {:ok, pid} = WeDle.Game.start("other_game")
       iex> WeDle.Game.join("other_game", "p1")
-      iex> WeDle.Game.start("other_game")
-      :ignore
+      iex> {:error, {:already_started, ^pid}} = WeDle.Game.start("other_game")
   """
   @spec start(id) :: Server.on_start()
   def start(game_id, opts \\ []) do
-    opts =
-      opts
-      |> Keyword.put_new(:word_length, 5)
-      |> Keyword.put(:game_id, game_id)
+    opts
+    |> Keyword.put_new(:word_length, 5)
+    |> Keyword.put(:game_id, game_id)
+    |> do_start()
+  end
 
-    ServerSupervisor.start_child({Server, opts})
+  defp do_start(opts) do
+    sup_name = {:via, PartitionSupervisor, {WeDle.Game.ServerSupervisors, self()}}
+    DynamicSupervisor.start_child(sup_name, {Server, opts})
   end
 
   @doc """
@@ -88,6 +89,9 @@ defmodule WeDle.Game do
       iex> {:ok, %WeDle.Game.Player{id: "Tina"}} = WeDle.Game.join("diva_game", "Tina")
       iex> WeDle.Game.join("diva_game", "Sade")
       {:error, :player_not_found}
+
+      iex> WeDle.Game.join("unjoinable_game", "Nobody")
+      {:error, :game_not_found}
   """
   @spec join(id, id) :: {:ok, player} | {:error, term}
   def join(game_id, player_id) do
@@ -100,9 +104,14 @@ defmodule WeDle.Game do
     end
   end
 
-  defp join(pid, game_id, player_id) do
-    EdgeSupervisor.start_edge(game_id, player_id)
-    EdgeServer.join_game(pid, game_id, player_id)
+  defp join(game_pid, game_id, player_id) do
+    edge_pid =
+      case EdgeServer.start_edge(game_pid, game_id, player_id) do
+        {:ok, pid} when is_pid(pid) -> pid
+        {:error, {:already_started, pid}} -> pid
+      end
+
+    GenServer.call(edge_pid, :join_game)
   end
 
   @doc """
@@ -124,7 +133,7 @@ defmodule WeDle.Game do
   def start_or_join(game_id, player_id, opts \\ []) do
     case start(game_id, opts) do
       {:ok, pid} -> join(pid, game_id, player_id)
-      :ignore -> join(game_id, player_id)
+      {:error, {:already_started, pid}} -> join(pid, game_id, player_id)
       {:error, _reason} = error -> error
     end
   end

@@ -1,7 +1,8 @@
 defmodule WeDle.Game.Server do
   @moduledoc """
-  The `WeDle.Game.Server` holds the game state and publishes
-  events to subscribers of that game.
+  The `WeDle.Game.Server` holds the game state, determines the results,
+  and sends update messages to the players via their respective
+  `WeDle.Game.EdgeServer`s.
   """
 
   use GenServer, shutdown: 10_000, restart: :transient
@@ -11,7 +12,6 @@ defmodule WeDle.Game.Server do
   alias WeDle.{
     Game,
     Game.Board,
-    Game.DistributedRegistry,
     Game.Handoff,
     Game.Player,
     Handoffs
@@ -19,33 +19,16 @@ defmodule WeDle.Game.Server do
 
   alias WeDle.Game.Handoff.Registry, as: HandoffRegistry
 
-  @type on_start :: {:ok, pid} | :ignore | {:error, {ArgumentError, stacktrace :: list}}
+  @type on_start :: {:ok, pid} | {:error, {:already_started, pid}} | {:error, term}
 
   # -- Client API --
 
-  @doc """
-  Starts and links a new game server.
-
-  Normally this will be done indirectly by passing the child
-  spec to a supervisor, such as the `WeDle.Game.DistributedSupervisor`,
-  or by calling the functions `WeDle.Game.start/1` or
-  `WeDle.Game.start_or_join/3`.
-  """
+  @doc false
   @spec start_link(keyword) :: on_start
   def start_link(opts) when is_list(opts) do
     game_id = Keyword.fetch!(opts, :game_id)
-
-    case GenServer.start_link(__MODULE__, opts, name: via_tuple(game_id)) do
-      {:ok, pid} ->
-        {:ok, pid}
-
-      {:error, {:already_started, pid}} ->
-        Logger.info("already started at #{inspect(pid)}, returning :ignore")
-        :ignore
-    end
+    GenServer.start_link(__MODULE__, opts, name: Game.name(game_id))
   end
-
-  defp via_tuple(game_id), do: DistributedRegistry.via_tuple(game_id)
 
   # -- Callbacks --
 
@@ -86,17 +69,17 @@ defmodule WeDle.Game.Server do
   end
 
   @impl true
-  def handle_call({:join_game, player_id}, {pid, _}, %{players: players} = game)
+  def handle_call({:join_game, player_id}, {edge_pid, _}, %{players: players} = game)
       when map_size(players) == 2 do
     with {:ok, player} <- get_player(game, player_id),
          {:ok, opponent} <- get_opponent(game, player_id) do
-      do_join_game(game, player_id, player, opponent, pid)
+      do_join_game(game, player_id, player, opponent, edge_pid)
     else
       {:error, _} = error -> {:reply, error, game}
     end
   end
 
-  def handle_call({:join_game, player_id}, {pid, _}, %{players: players} = game)
+  def handle_call({:join_game, player_id}, {edge_pid, _}, %{players: players} = game)
       when map_size(players) < 2 do
     player =
       Map.get_lazy(players, player_id, fn ->
@@ -105,7 +88,7 @@ defmodule WeDle.Game.Server do
       end)
 
     opponent = send_update_to_opponent(game, player)
-    do_join_game(game, player_id, player, opponent, pid)
+    do_join_game(game, player_id, player, opponent, edge_pid)
   end
 
   def handle_call(:reset, _, game) do
@@ -258,22 +241,22 @@ defmodule WeDle.Game.Server do
     Handoff.expiration_time(:millisecond) - start_diff
   end
 
-  defp do_join_game(game, player_id, player, opponent, pid) do
-    edge = Map.get(game.edge_servers, player_id)
+  defp do_join_game(game, player_id, player, opponent, edge_pid) do
+    game =
+      case Map.get(game.edge_servers, player_id) do
+        %{} ->
+          game
 
-    if edge && edge.pid != pid do
-      Process.demonitor(edge.ref, [:flush])
-      Process.exit(edge.pid, :shutdown)
-    end
+        nil ->
+          ref = Process.monitor(edge_pid)
+          edge = %{ref: ref, pid: edge_pid, pings: 0, avg_latency: 0}
 
-    ref = Process.monitor(pid)
-    new_edge = %{ref: ref, pid: pid, pings: 0, avg_latency: 0}
+          edge_servers = Map.put(game.edge_servers, player_id, edge)
+          players = Map.put_new(game.players, player_id, player)
 
-    edge_servers = Map.put(game.edge_servers, player_id, new_edge)
-    players = Map.put_new(game.players, player_id, player)
-    game = %{game | edge_servers: edge_servers, players: players}
-
-    send(self(), :ping_edge_servers)
+          send(self(), :ping_edge_servers)
+          %{game | edge_servers: edge_servers, players: players}
+      end
 
     reply = %{player: player, opponent: opponent}
     {:reply, {:ok, reply}, game}

@@ -5,6 +5,8 @@ defmodule WeDleWeb.GameLive.Index do
 
   use WeDleWeb, :live_view
 
+  require Logger
+
   @impl true
   def render(assigns) do
     ~H"""
@@ -48,7 +50,15 @@ defmodule WeDleWeb.GameLive.Index do
 
   def handle_event("start", _, socket) do
     game_id = WeDle.Game.unique_id()
-    {:ok, _} = WeDle.Game.start_or_join(game_id, socket.assigns.player_id)
-    {:noreply, redirect(socket, to: Routes.game_path(socket, :show, game_id))}
+
+    case WeDle.Game.start(game_id) do
+      {:ok, _} ->
+        {:noreply, redirect(socket, to: Routes.game_path(socket, :show, game_id))}
+
+      {:error, {:already_started, _}} ->
+        # In the very unlikely event that the id is taken, log it and try again
+        Logger.error("game ID \"#{game_id}\" is taken, generating a new one")
+        handle_event("start", %{}, socket)
+    end
   end
 end

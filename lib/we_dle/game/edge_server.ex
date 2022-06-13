@@ -206,11 +206,15 @@ defmodule WeDle.Game.EdgeServer do
   @impl true
   def terminate({:shutdown, {:error, reason}}, state) do
     Logger.error(shutdown_log_message(state, reason))
+    :ok
   end
 
   def terminate({:shutdown, reason}, state) do
     Logger.debug(shutdown_log_message(state, reason))
+    :ok
   end
+
+  def terminate(_, _), do: :ok
 
   defp shutdown_log_message(state, reason) do
     """

@@ -85,41 +85,6 @@ defmodule WeDleWeb.Components.Menus do
                         Play Wordle
                       </Components.App.link>
                     </li>
-                    <%= if @current_user do %>
-                      <li>
-                        <div class={"border #{border_color(@dark_theme)} my-6"}></div>
-                      </li>
-                      <%= if function_exported?(Routes, :live_dashboard_path, 2) do %>
-                        <li>
-                          <Components.App.link
-                            to={Routes.live_dashboard_path(@socket, :home)}
-                            target="_blank"
-                            dark_theme={@dark_theme}
-                          >
-                            LiveDashboard
-                          </Components.App.link>
-                        </li>
-                      <% end %>
-                      <li>
-                        <Components.App.link
-                          to={Routes.admin_user_settings_path(@socket, :edit)}
-                          target="_blank"
-                          dark_theme={@dark_theme}
-                        >
-                          Settings
-                        </Components.App.link>
-                      </li>
-                      <li>
-                        <Components.App.link
-                          to={Routes.admin_user_session_path(@socket, :delete)}
-                          method={:delete}
-                          target="_blank"
-                          dark_theme={@dark_theme}
-                        >
-                          Log out
-                        </Components.App.link>
-                      </li>
-                    <% end %>
                   </ul>
                 </div>
               </div>

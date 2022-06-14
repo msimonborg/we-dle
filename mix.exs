@@ -41,7 +41,6 @@ defmodule WeDle.MixProject do
       {:ecto_sql, "~> 3.6"},
       {:esbuild, "~> 0.4", runtime: Mix.env() == :dev},
       {:ex_doc, "~> 0.1", only: [:test, :dev]},
-      {:finch, "~> 0.12.0", only: :prod},
       {:floki, ">= 0.30.0", only: :test},
       {:gettext, "~> 0.18"},
       {:horde, "~> 0.8.7"},

@@ -20,6 +20,11 @@ config :we_dle, WeDleWeb.Endpoint,
   pubsub_server: WeDle.PubSub,
   live_view: [signing_salt: "Yx15Sa0K"]
 
+# Configures Plug.BasicAuth for viewing the live dashboard
+config :we_dle, :basic_auth,
+  username: "username",
+  password: "password"
+
 # Configure esbuild (the version is required)
 config :esbuild,
   version: "0.14.29",
@@ -48,8 +53,6 @@ config :logger, :console,
 
 # Use Jason for JSON parsing in Phoenix
 config :phoenix, :json_library, Jason
-
-config :we_dle, WeDle.Mailer, adapter: Swoosh.Adapters.Local
 
 config :swoosh, api_client: false
 

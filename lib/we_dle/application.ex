@@ -7,16 +7,15 @@ defmodule WeDle.Application do
 
   @impl true
   def start(_type, _args) do
-    children =
-      [
-        {Cluster.Supervisor, [topologies(), [name: WeDle.ClusterSupervisor]]},
-        WeDle.Repo,
-        WeDleWeb.Telemetry,
-        {Phoenix.PubSub, name: WeDle.PubSub},
-        WeDle.WordleWords,
-        WeDle.Game.Supervisor,
-        WeDleWeb.Endpoint
-      ] ++ start_finch_in_prod()
+    children = [
+      {Cluster.Supervisor, [topologies(), [name: WeDle.ClusterSupervisor]]},
+      WeDle.Repo,
+      WeDleWeb.Telemetry,
+      {Phoenix.PubSub, name: WeDle.PubSub},
+      WeDle.WordleWords,
+      WeDle.Game.Supervisor,
+      WeDleWeb.Endpoint
+    ]
 
     opts = [strategy: :one_for_one, name: WeDle.Supervisor]
     Supervisor.start_link(children, opts)
@@ -39,10 +38,5 @@ defmodule WeDle.Application do
   # libcluster clustering topologies
   defp topologies do
     Application.get_env(:libcluster, :topologies) || []
-  end
-
-  # only start Finch for mailers in production
-  defp start_finch_in_prod do
-    if runtime_env() == :prod, do: [{Finch, name: WeDle.Mailer.Finch}], else: []
   end
 end

@@ -162,8 +162,10 @@ defmodule WeDle.Game.Server do
     {:stop, {:shutdown, :timeout}, game}
   end
 
+  def handle_info({:EXIT, _, :normal}, game), do: {:noreply, game}
+
   def handle_info({:EXIT, _, reason}, game) do
-    Logger.debug("""
+    Logger.warn("""
     game with ID "#{game.id}" exiting with reason: #{inspect(reason)}
     """)
 
@@ -171,7 +173,7 @@ defmodule WeDle.Game.Server do
   end
 
   def handle_info(message, game) do
-    Logger.debug("""
+    Logger.warn("""
     game #{game.id} received unexpected message in `handle_info`:
 
         #{inspect(message)}

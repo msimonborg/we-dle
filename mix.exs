@@ -42,6 +42,7 @@ defmodule WeDle.MixProject do
       {:esbuild, "~> 0.4", runtime: Mix.env() == :dev},
       {:ex_doc, "~> 0.1", only: [:test, :dev]},
       {:floki, ">= 0.30.0", only: :test},
+      {:fly_postgres, "~> 0.2.0"},
       {:gettext, "~> 0.18"},
       {:horde, "~> 0.8.7"},
       {:jason, "~> 1.2"},

@@ -42,7 +42,7 @@ defmodule WeDle.Handoffs do
   def create_handoff(%Game{} = game) do
     game
     |> Handoff.changeset_from_game()
-    |> Repo.insert()
+    |> Repo.insert(await: false)
   end
 
   @doc """
@@ -75,7 +75,7 @@ defmodule WeDle.Handoffs do
   """
   @spec delete_handoff!(handoff) :: handoff
   def delete_handoff!(%Handoff{} = handoff) do
-    Repo.delete!(handoff)
+    Repo.delete!(handoff, await: false)
   end
 
   @doc """
@@ -101,7 +101,7 @@ defmodule WeDle.Handoffs do
 
     query = from h in Handoff, where: h.inserted_at < ^cutoff
 
-    with {num, nil} <- Repo.delete_all(query), do: num
+    with {num, nil} <- Repo.delete_all(query, await: false), do: num
   end
 
   @doc """
@@ -119,7 +119,7 @@ defmodule WeDle.Handoffs do
   """
   @spec delete_all_handoffs :: non_neg_integer
   def delete_all_handoffs do
-    with {num, nil} <- Repo.delete_all(Handoff), do: num
+    with {num, nil} <- Repo.delete_all(Handoff, await: false), do: num
   end
 
   @doc """
@@ -139,7 +139,7 @@ defmodule WeDle.Handoffs do
   def delete_handoff_if_exists(game_id) do
     query = from h in Handoff, where: h.game_id == ^game_id
 
-    case Repo.delete_all(query) do
+    case Repo.delete_all(query, await: false) do
       {1, _} -> true
       {0, _} -> false
     end

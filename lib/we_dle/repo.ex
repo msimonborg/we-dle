@@ -1,4 +1,6 @@
 defmodule WeDle.Repo.Local do
+  @moduledoc false
+
   use Ecto.Repo,
     otp_app: :we_dle,
     adapter: Ecto.Adapters.Postgres
@@ -13,5 +15,6 @@ defmodule WeDle.Repo.Local do
 end
 
 defmodule WeDle.Repo do
+  @moduledoc false
   use Fly.Repo, local_repo: WeDle.Repo.Local
 end

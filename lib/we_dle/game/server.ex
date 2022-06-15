@@ -165,7 +165,7 @@ defmodule WeDle.Game.Server do
   def handle_info({:EXIT, _, :normal}, game), do: {:noreply, game}
 
   def handle_info({:EXIT, _, reason}, game) do
-    Logger.warn("""
+    Logger.info("""
     game with ID "#{game.id}" exiting with reason: #{inspect(reason)}
     """)
 

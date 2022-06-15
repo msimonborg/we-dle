@@ -5,7 +5,7 @@ defmodule WeDleWeb.Router do
   import WeDleWeb.SettingsController
 
   defp basic_auth(conn, _) do
-    credentials = Application.fetch_env!(:we_dle, :basic_auth)
+    credentials = WeDle.config([:basic_auth])
     Plug.BasicAuth.basic_auth(conn, credentials)
   end
 

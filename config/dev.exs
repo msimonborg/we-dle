@@ -1,7 +1,7 @@
 import Config
 
 # Configure your database
-config :we_dle, WeDle.Repo,
+config :we_dle, WeDle.Repo.Local,
   username: "postgres",
   password: "postgres",
   hostname: "localhost",

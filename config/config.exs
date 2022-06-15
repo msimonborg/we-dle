@@ -7,10 +7,13 @@
 # General application configuration
 import Config
 
-config :we_dle, WeDle.Repo, queue_target: 1_000, queue_interval: 10_000
+config :we_dle, WeDle.Repo.Local,
+  queue_target: 1_000,
+  queue_interval: 10_000,
+  priv: "priv/repo"
 
 config :we_dle,
-  ecto_repos: [WeDle.Repo],
+  ecto_repos: [WeDle.Repo.Local],
   runtime_env: config_env()
 
 # Configures the endpoint

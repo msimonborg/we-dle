@@ -1,2 +1,2 @@
 ExUnit.start()
-Ecto.Adapters.SQL.Sandbox.mode(WeDle.Repo, :manual)
+Ecto.Adapters.SQL.Sandbox.mode(WeDle.Repo.Local, :manual)

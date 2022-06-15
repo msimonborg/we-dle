@@ -12,7 +12,7 @@ defmodule WeDle.Game.HandoffTest do
     # `false`. Also, our notification is triggered with an insertion
     # by another process (the `WeDle.Game.Server`), so we must share
     # the connection with other processes by setting `shared: true`.
-    pid = Sandbox.start_owner!(Repo, shared: true, sandbox: false)
+    pid = Sandbox.start_owner!(Repo.Local, shared: true, sandbox: false)
 
     on_exit(fn ->
       # Since we're outside of the sandbox there will be no rollback

@@ -9,7 +9,9 @@ defmodule WeDle.Application do
   def start(_type, _args) do
     children = [
       {Cluster.Supervisor, [topologies(), [name: WeDle.ClusterSupervisor]]},
-      WeDle.Repo,
+      Fly.RPC,
+      WeDle.Repo.Local,
+      {Fly.Postgres.LSN.Tracker, repo: WeDle.Repo.Local},
       WeDleWeb.Telemetry,
       {Phoenix.PubSub, name: WeDle.PubSub},
       WeDle.WordleWords,

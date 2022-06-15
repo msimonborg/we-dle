@@ -232,7 +232,12 @@ defmodule WeDle.Game.Server do
   defp set_expiration(game) do
     expiration_time = expiration_time(game)
 
-    if expiration_time > 0, do: Process.send_after(self(), :expire, expiration_time)
+    if expiration_time > 0 do
+      Process.send_after(self(), :expire, expiration_time)
+    else
+      send(self(), :expire)
+    end
+
     game
   end
 

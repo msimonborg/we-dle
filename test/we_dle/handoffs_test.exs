@@ -39,6 +39,16 @@ defmodule WeDle.HandoffsTest do
       assert {:error, changeset} = create_handoff(%{game | started_at: old_time})
       assert {"can't be over three hours old", _} = changeset.errors[:started_at]
     end
+
+    test "broadcasts a pubsub message on successful handoff creation", %{game: game} do
+      subscribe()
+
+      game_id = game.id
+      refute_received({:handoff_created, ^game_id})
+
+      {:ok, _} = create_handoff(game)
+      assert_received({:handoff_created, ^game_id})
+    end
   end
 
   describe "get_handoff/1" do

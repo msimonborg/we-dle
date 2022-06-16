@@ -6,7 +6,11 @@ defmodule WeDle.Handoffs do
 
   import Ecto.Query
 
+  alias Phoenix.PubSub
   alias WeDle.{Game, Game.Handoff, Repo}
+
+  @pubsub WeDle.PubSub
+  @topic "handoffs"
 
   @type game_id :: String.t()
   @type handoff :: %Handoff{}
@@ -30,6 +34,9 @@ defmodule WeDle.Handoffs do
 
   Returns `{:ok, handoff}` on success, or an error changeset otherwise.
 
+  Broadcasts a `{:handoff_created, game_id}` message on the "handoffs"
+  pubsub topic on successful creation.
+
   ## Examples
 
       iex> create_handoff(good_game)
@@ -40,9 +47,19 @@ defmodule WeDle.Handoffs do
   """
   @spec create_handoff(game) :: {:ok, handoff} | {:error, Ecto.Changeset.t()}
   def create_handoff(%Game{} = game) do
-    game
-    |> Handoff.changeset_from_game()
-    |> Repo.insert(await: false)
+    result =
+      game
+      |> Handoff.changeset_from_game()
+      |> Repo.insert(await: false)
+
+    case result do
+      {:ok, _} = ok ->
+        broadcast!({:handoff_created, game.id})
+        ok
+
+      error ->
+        error
+    end
   end
 
   @doc """
@@ -144,4 +161,18 @@ defmodule WeDle.Handoffs do
       {0, _} -> false
     end
   end
+
+  @doc """
+  Broadcasts a pubsub message on the "handoffs" topic.
+
+  Returns `:ok` if successful, or raises.
+  """
+  @spec broadcast!(payload :: term) :: :ok
+  def broadcast!(payload), do: PubSub.broadcast!(@pubsub, @topic, payload)
+
+  @doc """
+  Subscribes to the "handoffs" pubsub topic.
+  """
+  @spec subscribe :: :ok | {:error, term}
+  def subscribe, do: PubSub.subscribe(@pubsub, @topic)
 end

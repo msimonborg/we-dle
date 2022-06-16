@@ -4,10 +4,11 @@ defmodule WeDle.Game.Handoff.Listener do
   guaranteeing handoff states are delivered to the correct
   games on the local node.
 
-  The process listens to notifications on a Postgres pubsub
-  channel called "handoff_inserted", forwarding the
-  notification to the game process if it exists on the local
-  node.
+  The process listens to notifications on a Phoenix pubsub
+  channel called "handoffs", forwarding the notification to
+  the game process if it exists on the local node.
+
+  TODO: Update the remaining documentation
 
   We broadcast messages with Postgres on INSERT instead of using
   `Phoenix.PubSub` because we are interested in knowing when the
@@ -22,20 +23,15 @@ defmodule WeDle.Game.Handoff.Listener do
 
   require Logger
 
-  alias Postgrex.Notifications
-  alias WeDle.Game.Handoff
+  alias WeDle.{Game.Handoff, Handoffs}
 
-  defstruct [:notifier_ref, handoffs: [], counter: 0, node_status: :alive]
+  defstruct handoffs: [], counter: 0, node_status: :alive
 
   @type t :: %__MODULE__{
-          notifier_ref: reference,
           counter: non_neg_integer,
           handoffs: [String.t()],
           node_status: :alive | :shutting_down
         }
-
-  @channel "handoff_inserted"
-  @notifier Handoff.Notifier
 
   # -- Client API --
 
@@ -47,14 +43,8 @@ defmodule WeDle.Game.Handoff.Listener do
 
   @impl true
   def init(_init_arg) do
-    {:ok, %__MODULE__{}, {:continue, :start_listening}}
-  end
-
-  @impl true
-  def handle_continue(:start_listening, state) do
-    Process.monitor(@notifier)
-    {_, ref} = Notifications.listen(@notifier, @channel)
-    {:noreply, %{state | notifier_ref: ref}}
+    Handoffs.subscribe()
+    {:ok, %__MODULE__{}}
   end
 
   @impl true
@@ -66,19 +56,9 @@ defmodule WeDle.Game.Handoff.Listener do
     handle_info(msg, process_handoffs(state))
   end
 
-  def handle_info({:notification, _, ref, @channel, payload}, %{notifier_ref: ref} = state) do
-    {:noreply, %{state | handoffs: [payload | state.handoffs], counter: state.counter + 1}, 5}
-  end
-
-  def handle_info({:DOWN, ref, _, _, reason}, %{notifier_ref: ref} = state) do
-    Process.demonitor(ref, [:flush])
-
-    Logger.error(
-      "#{@notifier} down with reason #{reason}",
-      label: "#{__MODULE__} exiting"
-    )
-
-    {:stop, reason, %{state | notifier_ref: nil}}
+  def handle_info({:handoff_created, game_id}, %{handoffs: handoffs, counter: counter} = state) do
+    state = %{state | handoffs: [game_id | handoffs], counter: counter + 1}
+    {:noreply, state, _timeout = 5}
   end
 
   defp process_handoffs(%{handoffs: handoffs} = state) do

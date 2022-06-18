@@ -58,6 +58,7 @@ defmodule WeDle.Game.Supervisor do
 
   defp shutdown_subscribers do
     [
+      Game.Handoff.NotificationStore,
       Game.Handoff.Listener,
       Game.Handoff.Pruner
     ]

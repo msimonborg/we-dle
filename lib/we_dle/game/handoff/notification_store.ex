@@ -12,6 +12,10 @@ defmodule WeDle.Game.Handoff.NotificationStore do
 
   require Logger
 
+  defstruct node_status: :alive
+
+  @type t :: %__MODULE__{node_status: :alive | :shutting_down}
+
   # 120 seconds
   @interval 120
   @name __MODULE__
@@ -52,6 +56,7 @@ defmodule WeDle.Game.Handoff.NotificationStore do
 
   # -- Callbacks --
 
+  @impl true
   def init(_) do
     :ets.new(@name, [
       :named_table,
@@ -64,8 +69,12 @@ defmodule WeDle.Game.Handoff.NotificationStore do
     |> :timer.seconds()
     |> :timer.send_interval(:prune_table)
 
-    {:ok, []}
+    {:ok, %__MODULE__{}}
   end
+
+  @impl true
+  def handle_info(_, %{node_status: :shutting_down} = state), do: {:noreply, state}
+  def handle_info(:shutting_down, state), do: {:noreply, %{state | node_status: :shutting_down}}
 
   def handle_info(:prune_table, state) do
     prune_table()

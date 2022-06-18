@@ -26,7 +26,7 @@ defmodule WeDle.Game.HandoffTest do
 
   describe "game state handoff" do
     test "a game can handoff its state at shutdown to a new instance" do
-      game = "handoff1"
+      game = unique_id()
 
       {:ok, %Player{challenge: nil}} = start_or_join(game, "p1")
       {:ok, %Player{challenge: nil}} = start_or_join(game, "p2")
@@ -39,7 +39,7 @@ defmodule WeDle.Game.HandoffTest do
 
       Process.exit(game_pid, :shutdown)
 
-      Process.sleep(20)
+      Process.sleep(50)
 
       assert whereis(game) |> is_nil()
 
@@ -54,12 +54,12 @@ defmodule WeDle.Game.HandoffTest do
     end
 
     test "a game will receive a newly synced state handoff after the game has started" do
-      game = "handoff2"
+      game = unique_id()
 
       {:ok, %Player{challenge: nil}} = start_or_join(game, "p1")
       {:ok, %Player{challenge: nil}} = start_or_join(game, "p2")
 
-      handoff_state = build_state(game: game)
+      handoff_state = build_state(id: game)
 
       Handoffs.create_handoff(handoff_state)
 
@@ -74,8 +74,33 @@ defmodule WeDle.Game.HandoffTest do
       assert Handoffs.get_handoff(game) |> is_nil()
     end
 
+    test "a game will receive a handoff if it starts between creation and propagation" do
+      game = unique_id()
+
+      handoff_state = build_state(id: game)
+      Handoffs.broadcast!({:handoff_created, game})
+
+      Process.sleep(50)
+
+      assert Handoff.NotificationStore.contains?(game)
+
+      assert {:ok, %Player{challenge: nil}} = start_or_join(game, "p1")
+      assert {:ok, %Player{challenge: nil}} = start_or_join(game, "p2")
+
+      refute Handoff.NotificationStore.contains?(game)
+
+      handoff_state
+      |> Handoff.changeset_from_game()
+      |> Repo.insert()
+
+      Process.sleep(50)
+
+      assert {:ok, %Player{challenge: "hello"}} = start_or_join(game, "p1")
+      assert {:ok, %Player{challenge: "world"}} = start_or_join(game, "p2")
+    end
+
     test "a game will not receive a handoff if the state is too old" do
-      game = "handoff3"
+      game = unique_id()
 
       {:ok, %Player{challenge: nil}} = start_or_join(game, "p1")
       {:ok, %Player{challenge: nil}} = start_or_join(game, "p2")
@@ -83,7 +108,7 @@ defmodule WeDle.Game.HandoffTest do
       expiration_time = Handoff.expiration_time(:second)
       old_time = DateTime.add(DateTime.utc_now(), -(expiration_time + 1), :second)
 
-      handoff_state = build_state(game: game, started_at: old_time)
+      handoff_state = build_state(id: game, started_at: old_time)
 
       assert {:error, _} = Handoffs.create_handoff(handoff_state)
       assert Handoffs.get_handoff(game) |> is_nil()
@@ -97,7 +122,7 @@ defmodule WeDle.Game.HandoffTest do
     end
 
     defp build_state(opts) do
-      game = Keyword.fetch!(opts, :game)
+      game = Keyword.fetch!(opts, :id)
       started_at = Keyword.get(opts, :started_at, DateTime.utc_now())
 
       %Game{

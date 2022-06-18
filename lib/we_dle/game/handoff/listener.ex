@@ -81,7 +81,7 @@ defmodule WeDle.Game.Handoff.Listener do
   defp forward_if_game_is_local(handoff) do
     case Registry.lookup(Handoff.Registry, handoff) do
       [{pid, _}] -> send(pid, :handoff_available)
-      [] -> :ok
+      [] -> Handoff.NotificationStore.insert(handoff)
     end
   end
 end

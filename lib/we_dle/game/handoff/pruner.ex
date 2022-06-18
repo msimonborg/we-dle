@@ -15,7 +15,7 @@ defmodule WeDle.Game.Handoff.Pruner do
   @type t :: %__MODULE__{node_status: :alive | :shutting_down}
 
   # Prune every five minutes
-  @pruning_interval 5
+  @pruning_interval 300
 
   # -- Client API --
 
@@ -28,7 +28,7 @@ defmodule WeDle.Game.Handoff.Pruner do
   @impl true
   def init(_init_arg) do
     @pruning_interval
-    |> to_millisecond()
+    |> :timer.seconds()
     |> :timer.send_interval(:prune)
 
     {:ok, %__MODULE__{}}
@@ -47,6 +47,4 @@ defmodule WeDle.Game.Handoff.Pruner do
 
     {:noreply, state}
   end
-
-  defp to_millisecond(minutes), do: minutes * 60_000
 end

@@ -6,7 +6,7 @@ defmodule WeDle.Game.Handoff.Supervisor do
 
   use Supervisor
 
-  alias WeDle.{Game.Handoff, Repo}
+  alias WeDle.Game.Handoff
 
   # -- Client API --
 
@@ -21,15 +21,11 @@ defmodule WeDle.Game.Handoff.Supervisor do
     children = [
       {Registry, keys: :unique, name: Handoff.Registry, partitions: System.schedulers_online()},
       {Task.Supervisor, name: Handoff.TaskSup},
-      {Postgrex.Notifications, notifier_opts()},
+      Handoff.NotificationStore,
       Handoff.Listener,
       Handoff.Pruner
     ]
 
     Supervisor.init(children, strategy: :one_for_one)
-  end
-
-  defp notifier_opts do
-    Keyword.put_new(Repo.config(), :name, Handoff.Notifier)
   end
 end

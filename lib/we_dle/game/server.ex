@@ -19,6 +19,8 @@ defmodule WeDle.Game.Server do
 
   alias WeDle.Game.Handoff.Registry, as: HandoffRegistry
 
+  @rpc_retries 3
+
   @type on_start :: {:ok, pid} | {:error, {:already_started, pid}} | {:error, term}
 
   # -- Client API --
@@ -53,50 +55,23 @@ defmodule WeDle.Game.Server do
   def handle_continue(:load_game, %{id: id} = game) do
     game =
       case Handoffs.get_handoff(id) do
-        nil ->
-          Process.send_after(self(), :unregister_for_handoff, 120_000)
-          game
-
-        handoff ->
+        %Handoff{} = handoff ->
           unregister_for_handoff(id)
 
           handoff
           |> Handoffs.delete_handoff!()
           |> Game.game_from_handoff()
+
+        _ ->
+          if Handoff.NotificationStore.contains?(game.id),
+            do: send(self(), {:get_game_from_primary, @rpc_retries}),
+            else: Process.send_after(self(), :unregister_for_handoff, 120_000)
+
+          game
       end
 
+    Handoff.NotificationStore.delete(game.id)
     {:noreply, set_expiration(game)}
-  end
-
-  @impl true
-  def handle_call({:join_game, player_id}, {edge_pid, _}, %{players: players} = game)
-      when map_size(players) == 2 do
-    with {:ok, player} <- get_player(game, player_id),
-         {:ok, opponent} <- get_opponent(game, player_id) do
-      do_join_game(game, player_id, player, opponent, edge_pid)
-    else
-      {:error, _} = error -> {:reply, error, game}
-    end
-  end
-
-  def handle_call({:join_game, player_id}, {edge_pid, _}, %{players: players} = game)
-      when map_size(players) < 2 do
-    player =
-      Map.get_lazy(players, player_id, fn ->
-        board = Board.new(game.word_length)
-        Player.new(id: player_id, game_id: game.id, board: board)
-      end)
-
-    opponent = send_update_to_opponent(game, player)
-    do_join_game(game, player_id, player, opponent, edge_pid)
-  end
-
-  def handle_call(:reset, _, game) do
-    {:stop, :reset, :ok, reset(game)}
-  end
-
-  defp reset(%{id: game_id, word_length: word_length}) do
-    %Game{id: game_id, word_length: word_length, started_at: DateTime.utc_now()}
   end
 
   @impl true
@@ -104,15 +79,12 @@ defmodule WeDle.Game.Server do
     {:stop, {:shutdown, :expired}, game}
   end
 
-  def handle_info(:handoff_available, %{id: id} = _stale_game) do
-    unregister_for_handoff(id)
+  def handle_info(:handoff_available, game) do
+    {:noreply, get_game_from_primary(game, @rpc_retries)}
+  end
 
-    {:noreply,
-     id
-     |> Handoffs.get_handoff()
-     |> Handoffs.delete_handoff!()
-     |> Game.game_from_handoff()
-     |> set_expiration()}
+  def handle_info({:get_game_from_primary, retries}, game) do
+    {:noreply, get_game_from_primary(game, retries)}
   end
 
   def handle_info(:unregister_for_handoff, game) do
@@ -182,13 +154,35 @@ defmodule WeDle.Game.Server do
     {:noreply, game}
   end
 
-  defp demonitor_edge(ref, %{edge_servers: edge_servers} = game) do
-    Process.demonitor(ref, [:flush])
-
-    case Enum.find(edge_servers, fn {_, edge} -> edge.ref == ref end) do
-      {player_id, _} -> %{game | edge_servers: Map.delete(edge_servers, player_id)}
-      nil -> game
+  @impl true
+  def handle_call({:join_game, player_id}, {edge_pid, _}, %{players: players} = game)
+      when map_size(players) == 2 do
+    with {:ok, player} <- get_player(game, player_id),
+         {:ok, opponent} <- get_opponent(game, player_id) do
+      do_join_game(game, player_id, player, opponent, edge_pid)
+    else
+      {:error, _} = error -> {:reply, error, game}
     end
+  end
+
+  def handle_call({:join_game, player_id}, {edge_pid, _}, %{players: players} = game)
+      when map_size(players) < 2 do
+    player =
+      Map.get_lazy(players, player_id, fn ->
+        board = Board.new(game.word_length)
+        Player.new(id: player_id, game_id: game.id, board: board)
+      end)
+
+    opponent = send_update_to_opponent(game, player)
+    do_join_game(game, player_id, player, opponent, edge_pid)
+  end
+
+  def handle_call(:reset, _, game) do
+    {:stop, :reset, :ok, reset(game)}
+  end
+
+  defp reset(%{id: game_id, word_length: word_length}) do
+    %Game{id: game_id, word_length: word_length, started_at: DateTime.utc_now()}
   end
 
   @impl true
@@ -230,6 +224,38 @@ defmodule WeDle.Game.Server do
   end
 
   # -- Private Helpers --
+
+  # Use a remote procedure call to query for the handoff
+  # in the primary database, since we either already just
+  # checked the local replica, or we just received an
+  # event notification and the data may not have propagated
+  defp get_game_from_primary(game, retries)
+  defp get_game_from_primary(game, 0), do: game
+
+  defp get_game_from_primary(game, retries) do
+    if retries == 3, do: unregister_for_handoff(game.id)
+
+    case Fly.rpc_primary(Handoffs, :get_handoff, [game.id]) do
+      %Handoff{} = handoff ->
+        handoff
+        |> Handoffs.delete_handoff!()
+        |> Game.game_from_handoff()
+        |> set_expiration()
+
+      _ ->
+        Process.send_after(self(), {:get_game_from_primary, retries - 1}, 10)
+        game
+    end
+  end
+
+  defp demonitor_edge(ref, %{edge_servers: edge_servers} = game) do
+    Process.demonitor(ref, [:flush])
+
+    case Enum.find(edge_servers, fn {_, edge} -> edge.ref == ref end) do
+      {player_id, _} -> %{game | edge_servers: Map.delete(edge_servers, player_id)}
+      nil -> game
+    end
+  end
 
   defp set_expiration(game) do
     expiration_time = expiration_time(game)

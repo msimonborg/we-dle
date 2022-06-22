@@ -19,8 +19,6 @@ defmodule WeDle.Game.Server do
 
   alias WeDle.Game.Handoff.Registry, as: HandoffRegistry
 
-  @rpc_retries 3
-
   @type on_start :: {:ok, pid} | {:error, {:already_started, pid}} | {:error, term}
 
   # -- Client API --
@@ -46,9 +44,7 @@ defmodule WeDle.Game.Server do
     # avoid a possible race condition with the Handoff.Listener
     register_for_handoff(game_id)
 
-    game = %Game{id: game_id, word_length: word_length, started_at: DateTime.utc_now()}
-
-    {:ok, game, {:continue, :load_game}}
+    {:ok, new_game_state(game_id, word_length), {:continue, :load_game}}
   end
 
   @impl true
@@ -56,22 +52,17 @@ defmodule WeDle.Game.Server do
     game =
       case Handoffs.get_handoff(id) do
         %Handoff{} = handoff ->
-          unregister_for_handoff(id)
-
-          handoff
-          |> Handoffs.delete_handoff!()
-          |> Game.game_from_handoff()
+          game_from_handoff(handoff)
 
         _ ->
           if Handoff.NotificationStore.contains?(game.id),
-            do: send(self(), {:get_game_from_primary, @rpc_retries}),
-            else: Process.send_after(self(), :unregister_for_handoff, 120_000)
-
-          game
+            do: try_to_get_game_from_primary(game),
+            else: game
       end
 
+    Process.send_after(self(), :unregister_for_handoff, 120_000)
     Handoff.NotificationStore.delete(game.id)
-    {:noreply, set_expiration(game)}
+    {:noreply, game}
   end
 
   @impl true
@@ -80,11 +71,7 @@ defmodule WeDle.Game.Server do
   end
 
   def handle_info(:handoff_available, game) do
-    {:noreply, get_game_from_primary(game, @rpc_retries)}
-  end
-
-  def handle_info({:get_game_from_primary, retries}, game) do
-    {:noreply, get_game_from_primary(game, retries)}
+    {:noreply, try_to_get_game_from_primary(game)}
   end
 
   def handle_info(:unregister_for_handoff, game) do
@@ -225,26 +212,28 @@ defmodule WeDle.Game.Server do
 
   # -- Private Helpers --
 
+  defp new_game_state(game_id, word_length) do
+    game = %Game{id: game_id, word_length: word_length, started_at: DateTime.utc_now()}
+    set_expiration(game)
+  end
+
+  defp game_from_handoff(handoff) when is_struct(handoff, WeDle.Game.Handoff) do
+    unregister_for_handoff(handoff.game_id)
+
+    handoff
+    |> Handoffs.delete_handoff!()
+    |> Game.game_from_handoff()
+    |> set_expiration()
+  end
+
   # Use a remote procedure call to query for the handoff
   # in the primary database, since we either already just
   # checked the local replica, or we just received an
   # event notification and the data may not have propagated
-  defp get_game_from_primary(game, retries)
-  defp get_game_from_primary(game, 0), do: game
-
-  defp get_game_from_primary(game, retries) do
-    if retries == 3, do: unregister_for_handoff(game.id)
-
+  defp try_to_get_game_from_primary(game) do
     case Fly.rpc_primary(Handoffs, :get_handoff, [game.id]) do
-      %Handoff{} = handoff ->
-        handoff
-        |> Handoffs.delete_handoff!()
-        |> Game.game_from_handoff()
-        |> set_expiration()
-
-      _ ->
-        Process.send_after(self(), {:get_game_from_primary, retries - 1}, 10)
-        game
+      %Handoff{} = handoff -> game_from_handoff(handoff)
+      _ -> game
     end
   end
 

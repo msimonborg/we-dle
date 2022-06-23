@@ -34,7 +34,6 @@ defmodule WeDle.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
-      {:bcrypt_elixir, "~> 3.0"},
       {:benchee, "~> 1.1", only: :dev},
       {:benchee_html, "~> 1.0", only: :dev},
       {:credo, "~> 1.6", only: [:dev, :test], runtime: false},
@@ -55,7 +54,6 @@ defmodule WeDle.MixProject do
       {:phoenix_live_view, "~> 0.17.5"},
       {:plug_cowboy, "~> 2.5"},
       {:postgrex, ">= 0.0.0"},
-      {:swoosh, "~> 1.4"},
       {:tailwind, "~> 0.1", runtime: Mix.env() == :dev},
       {:telemetry_metrics, "~> 0.6"},
       {:telemetry_poller, "~> 1.0"}

@@ -76,9 +76,6 @@ if config_env() == :prod do
     ],
     secret_key_base: secret_key_base
 
-  #
-  # See https://hexdocs.pm/swoosh/Swoosh.html#module-installation for details.
-
   app_name =
     System.get_env("FLY_APP_NAME") ||
       raise "FLY_APP_NAME not available"

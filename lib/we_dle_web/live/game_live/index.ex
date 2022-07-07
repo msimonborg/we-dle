@@ -36,7 +36,7 @@ defmodule WeDleWeb.GameLive.Index do
     {:ok,
      socket
      |> assign(:current_user, current_user)
-     |> assign(:env, WeDle.Application.runtime_env())
+     |> assign(:env, WeDle.config([:env]))
      |> assign(Map.from_struct(settings))}
   end
 

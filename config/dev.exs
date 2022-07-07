@@ -60,7 +60,7 @@ config :we_dle, WeDleWeb.Endpoint,
     patterns: [
       ~r"priv/static/.*(js|css|png|jpeg|jpg|gif|svg)$",
       ~r"priv/gettext/.*(po)$",
-      ~r"lib/we_dle_web/(live|views)/.*(ex)$",
+      ~r"lib/we_dle_web/(live|views|components)/.*(ex)$",
       ~r"lib/we_dle_web/templates/.*(eex)$"
     ]
   ]

@@ -31,12 +31,6 @@ defmodule WeDle.Application do
     :ok
   end
 
-  @doc """
-  Returns the runtime environment as configured in `config/config.exs`
-  by `Config.config_env/0`.
-  """
-  def runtime_env, do: Application.get_env(:we_dle, :runtime_env)
-
   # libcluster clustering topologies
   defp topologies do
     Application.get_env(:libcluster, :topologies) || []

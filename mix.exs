@@ -11,7 +11,7 @@ defmodule WeDle.MixProject do
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
       deps: deps(),
-      preferred_cli_env: [we_dle: :test]
+      preferred_cli_env: [build: :test]
     ]
   end
 
@@ -73,7 +73,7 @@ defmodule WeDle.MixProject do
       "ecto.reset": ["ecto.drop", "ecto.setup"],
       test: ["ecto.create --quiet", "ecto.migrate --quiet", "test"],
       "assets.deploy": ["tailwind default --minify", "esbuild default --minify", "phx.digest"],
-      we_dle: ["test", "credo --strict", "format", "docs"]
+      build: ["test", "credo --strict", "format", "docs"]
     ]
   end
 end

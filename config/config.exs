@@ -14,7 +14,7 @@ config :we_dle, WeDle.Repo.Local,
 
 config :we_dle,
   ecto_repos: [WeDle.Repo.Local],
-  runtime_env: config_env()
+  env: config_env()
 
 # Configures the endpoint
 config :we_dle, WeDleWeb.Endpoint,

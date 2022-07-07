@@ -39,7 +39,7 @@ defmodule WeDleWeb.GameLive.Show do
      |> assign(:game_id, game_id)
      |> assign(:current_user, current_user)
      |> assign(Map.from_struct(settings))
-     |> assign(:env, WeDle.Application.runtime_env())
+     |> assign(:env, WeDle.config([:env]))
      |> join_game_if_connected(connected)}
   end
 

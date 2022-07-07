@@ -36,11 +36,11 @@ defmodule WeDleWeb.GameLive.ShowTest do
       Game.start(id)
       {:ok, view, html} = live(conn, "/" <> id)
 
-      assert html =~ ~s{<div class="h-screen bg-zinc-100">}
+      assert html =~ ~s{<div id="app-shell" class="light"}
 
       assert view
              |> element(~s{[phx-click="change_dark_theme"]})
-             |> render_click() =~ ~s{<div class="h-screen bg-zinc-900">}
+             |> render_click() =~ ~s{<div id="app-shell" class="dark"}
     end
   end
 end

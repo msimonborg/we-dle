@@ -26,19 +26,19 @@ defmodule WeDleWeb.Components.Menus do
           >
             <div class="pointer-events-auto w-screen sm:max-w-sm">
               <div class={
-                "flex h-full flex-col overflow-y-scroll #{background_color(@dark_theme)} border-r #{border_color(@dark_theme)} py-6 shadow-2xl"
+                "flex h-full flex-col overflow-y-scroll #{background_color()} border-r #{border_color()} py-6 shadow-2xl"
               }>
                 <div class="px-4 sm:px-6">
                   <div class="flex items-start justify-between">
                     <div>
                       <h2
-                        class={"text-2xl font-medium font-serif #{text_color(@dark_theme)}"}
+                        class={"text-2xl font-medium font-serif #{text_color()}"}
                         id="slide-over-title"
                       >
                         we-dle
                       </h2>
                       <%= if @current_user do %>
-                        <span class={"block text-sm font-light font-sans #{text_color(@dark_theme)}"}>
+                        <span class={"block text-sm font-light font-sans #{text_color()}"}>
                           <%= @current_user.email %>
                         </span>
                       <% end %>
@@ -47,7 +47,6 @@ defmodule WeDleWeb.Components.Menus do
                       <Components.Buttons.menu_button
                         id="close-main-menu-button"
                         sr_text="Close Main Menu"
-                        dark_theme={@dark_theme}
                         @click={"#{@open_state} = ! #{@open_state}"}
                       >
                         <Components.Icons.outline_x aria-hidden={"! #{@open_state}"} />
@@ -56,32 +55,20 @@ defmodule WeDleWeb.Components.Menus do
                   </div>
                 </div>
                 <div class="relative flex-1 px-4 sm:px-6">
-                  <div class={"border #{border_color(@dark_theme)} my-6"}></div>
+                  <div class={"border #{border_color()} my-6"}></div>
                   <ul class="space-y-2">
                     <li>
-                      <Components.App.link
-                        to="https://github.com/msimonborg/we-dle"
-                        target="_blank"
-                        dark_theme={@dark_theme}
-                      >
+                      <Components.App.link to="https://github.com/msimonborg/we-dle" target="_blank">
                         Source Code
                       </Components.App.link>
                     </li>
                     <li>
-                      <Components.App.link
-                        to="https://www.patreon.com/we_dle"
-                        target="_blank"
-                        dark_theme={@dark_theme}
-                      >
+                      <Components.App.link to="https://www.patreon.com/we_dle" target="_blank">
                         Sponsor
                       </Components.App.link>
                     </li>
                     <li>
-                      <Components.App.link
-                        to="https://www.nytimes.com/games/wordle/"
-                        target="_blank"
-                        dark_theme={@dark_theme}
-                      >
+                      <Components.App.link to="https://www.nytimes.com/games/wordle/" target="_blank">
                         Play Wordle
                       </Components.App.link>
                     </li>
@@ -110,7 +97,7 @@ defmodule WeDleWeb.Components.Menus do
         x-transition:leave="ease-in duration-200"
         x-transition:leave-start="opacity-100"
         x-transition:leave-end="opacity-0"
-        class={"fixed inset-0 #{background_color(@dark_theme)} transition-opacity"}
+        class={"fixed inset-0 #{background_color()} transition-opacity"}
       >
       </div>
 
@@ -127,23 +114,22 @@ defmodule WeDleWeb.Components.Menus do
             x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
             x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
             class={
-              "relative #{background_color(@dark_theme)} px-4 pt-5 pb-4 text-left overflow-hidden transform transition-all max-w-md w-full p-6"
+              "relative #{background_color()} px-4 pt-5 pb-4 text-left overflow-hidden transform transition-all max-w-md w-full p-6"
             }
           >
             <div class="block absolute top-0 right-0 pt-4 pr-4">
               <Components.Buttons.menu_button
                 sr_text="Close Settings Menu"
                 id="close-settings"
-                dark_theme={@dark_theme}
                 @click={"#{@open_state} = ! #{@open_state}"}
               >
                 <Components.Icons.outline_x />
               </Components.Buttons.menu_button>
             </div>
             <div class="flex justify-center">
-              <h2 class={"text-lg font-bold #{text_color(@dark_theme)}"}>SETTINGS</h2>
+              <h2 class={"text-lg font-bold #{text_color()}"}>SETTINGS</h2>
             </div>
-            <div class={"divide-y #{divide_color(@dark_theme)}"}>
+            <div class={"divide-y #{divide_color()}"}>
               <.settings_menu_input
                 field={:hard_mode}
                 label="Hard Mode"
@@ -176,7 +162,7 @@ defmodule WeDleWeb.Components.Menus do
   defp settings_menu_input(assigns) do
     ~H"""
     <div class="relative flex items-start py-6">
-      <div class={"min-w-0 flex-1 #{text_color(@dark_theme)} text-sm font-medium text-lg"}>
+      <div class={"min-w-0 flex-1 #{text_color()} text-sm font-medium text-lg"}>
         <p><%= @label %></p>
       </div>
       <Components.Buttons.toggle_button field={@field} value={@value} {assigns} />

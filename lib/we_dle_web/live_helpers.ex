@@ -3,18 +3,9 @@ defmodule WeDleWeb.LiveHelpers do
   Presentation helper functions.
   """
 
-  def background_color(0 = _dark_theme), do: "bg-zinc-100"
-  def background_color(1 = _dark_theme), do: "bg-zinc-900"
-
-  def border_color(0 = _dark_theme), do: "border-zinc-300"
-  def border_color(1 = _dark_theme), do: "border-zinc-700"
-
-  def text_color(0 = _dark_theme), do: "text-zinc-900"
-  def text_color(1 = _dark_theme), do: "text-zinc-100"
-
-  def hover_text_color(0 = _dark_theme), do: "hover:text-zinc-700"
-  def hover_text_color(1 = _dark_theme), do: "hover:text-zinc-200"
-
-  def divide_color(0 = _dark_theme), do: "divide-zinc-300"
-  def divide_color(1 = _dark_theme), do: "divide-zinc-700"
+  def text_color, do: "text-zinc-900 dark:text-zinc-100"
+  def background_color, do: "bg-zinc-100 dark:bg-zinc-900"
+  def border_color, do: "border-zinc-300 dark:border-zinc-700"
+  def divide_color, do: "divide-zinc-300 dark:divide-zinc-700"
+  def hover_text_color, do: "hover:text-zinc-700 dark:hover:text-zinc-300"
 end

@@ -13,6 +13,9 @@ defmodule WeDleWeb.AppLive.Game do
     <%= unless @env == :prod do %>
       <.expire_button />
     <% end %>
+    <%= if connected?(@socket) do %>
+      <Components.Game.board board={@player.board} />
+    <% end %>
     """
   end
 

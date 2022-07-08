@@ -22,7 +22,9 @@ defmodule WeDleWeb.Components.Menus do
             x-transition:leave="transform transition ease-in-out duration-500"
             x-transition:leave-start="-translate-x-0"
             x-transition:leave-end="-translate-x-full"
-            class="pointer-events-none fixed h-full left-0 flex max-w-full"
+            class={
+              "pointer-events-none fixed h-full left-0 flex max-w-full border-t #{border_color()}"
+            }
           >
             <div class="pointer-events-auto w-screen sm:max-w-sm">
               <div class={

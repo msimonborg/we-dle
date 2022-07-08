@@ -10,7 +10,6 @@ defmodule WeDleWeb.GameController do
   alias WeDleWeb.AppLive
 
   def redirect_to_existing_game(conn, _) do
-    IO.inspect("in plug")
     current_path = current_path(conn)
     check_for_game_and_maybe_redirect(conn, current_path)
   end

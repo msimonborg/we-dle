@@ -31,11 +31,11 @@ defmodule WeDleWeb.Components.App do
     ~H"""
     <div
       id="app-shell"
-      class={(@dark_theme == 1 and "dark") || "light"}
+      class={[(@dark_theme == 1 and "dark") || "light"]}
       x-data="{ mainMenuOpen: false, settingsOpen: false }"
     >
-      <div class={"h-screen #{background_color()}"}>
-        <nav class={"border-b #{border_color()}"}>
+      <div class={"flex h-screen relative #{background_color()}"}>
+        <nav class={"absolute inset-x-0 top-0 border-b #{border_color()}"}>
           <div class="max-w-full mx-auto px-4">
             <div class="flex justify-between h-16">
               <div class="flex items-center">
@@ -90,25 +90,19 @@ defmodule WeDleWeb.Components.App do
               </div>
             </div>
           </div>
+          <div id="main-menu">
+            <Components.Menus.main_menu open_state="mainMenuOpen" {assigns} />
+          </div>
+          <div id="settings">
+            <Components.Menus.settings open_state="settingsOpen" {assigns} />
+          </div>
         </nav>
 
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-          <main>
-            <div id="main-menu">
-              <Components.Menus.main_menu open_state="mainMenuOpen" {assigns} />
-            </div>
-            <div id="settings">
-              <Components.Menus.settings open_state="settingsOpen" {assigns} />
-            </div>
-            <%= render_slot(@inner_block) %>
-          </main>
-        </div>
+        <main class="m-auto sm:px-6 lg:px-8">
+          <%= render_slot(@inner_block) %>
+        </main>
       </div>
     </div>
-    <!-- This iframe provides a target for hidden form submissions and HTTP requests -->
-    <!-- that mutate the session state. -->
-    <iframe hidden name="hidden_iframe" src={Routes.iframe_path(@socket, :index)} height="0" width="0">
-    </iframe>
     """
   end
 end

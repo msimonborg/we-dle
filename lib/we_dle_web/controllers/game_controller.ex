@@ -1,36 +1,40 @@
 defmodule WeDleWeb.GameController do
   @moduledoc """
-  The controller that renders the `GameLive` live view.
+  Plugs that handle redirection to existing games, or away from
+  expired ones.
   """
 
   use WeDleWeb, :controller
 
   alias WeDle.Game
-  alias WeDleWeb.GameLive
+  alias WeDleWeb.AppLive
 
-  plug :remove_app_layout
+  def redirect_to_existing_game(conn, _) do
+    IO.inspect("in plug")
+    current_path = current_path(conn)
+    check_for_game_and_maybe_redirect(conn, current_path)
+  end
 
-  def index(conn, _params) do
+  defp check_for_game_and_maybe_redirect(conn, "/") do
     game_id = get_session(conn, :game_id)
 
     if game_id do
-      redirect(conn, to: Routes.game_path(conn, :show, game_id))
+      conn
+      |> redirect(to: Routes.live_path(conn, AppLive.Game, game_id))
+      |> halt()
     else
-      live_render(conn, GameLive.Index, session: %{"current_user" => conn.assigns[:current_user]})
+      conn
     end
   end
 
-  def show(conn, %{"game_id" => game_id}) do
+  defp check_for_game_and_maybe_redirect(conn, "/" <> game_id) do
     if Game.exists?(game_id) do
-      conn
-      |> put_session(:game_id, game_id)
-      |> live_render(GameLive.Show, session: %{"current_user" => conn.assigns[:current_user]})
+      put_session(conn, :game_id, game_id)
     else
       conn
       |> delete_session(:game_id)
-      |> redirect(to: Routes.game_path(conn, :index))
+      |> redirect(to: Routes.live_path(conn, AppLive.Lobby))
+      |> halt()
     end
   end
-
-  defp remove_app_layout(conn, _), do: put_layout(conn, false)
 end

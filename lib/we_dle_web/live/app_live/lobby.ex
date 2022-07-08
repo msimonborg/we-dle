@@ -1,4 +1,4 @@
-defmodule WeDleWeb.GameLive.Index do
+defmodule WeDleWeb.AppLive.Lobby do
   @moduledoc """
   The live view that renders the welcome and game creation page.
   """
@@ -6,6 +6,9 @@ defmodule WeDleWeb.GameLive.Index do
   use WeDleWeb, :live_view
 
   require Logger
+
+  alias WeDle.Game
+  alias WeDleWeb.AppLive
 
   @impl true
   def render(assigns) do
@@ -31,11 +34,9 @@ defmodule WeDleWeb.GameLive.Index do
   @impl true
   def mount(_params, session, socket) do
     settings = Map.fetch!(session, "settings")
-    current_user = Map.fetch!(session, "current_user")
 
     {:ok,
      socket
-     |> assign(:current_user, current_user)
      |> assign(:env, WeDle.config([:env]))
      |> assign(Map.from_struct(settings))}
   end
@@ -49,11 +50,11 @@ defmodule WeDleWeb.GameLive.Index do
   end
 
   def handle_event("start", _, socket) do
-    game_id = WeDle.Game.unique_id()
+    game_id = Game.unique_id()
 
-    case WeDle.Game.start(game_id) do
+    case Game.start(game_id) do
       {:ok, _} ->
-        {:noreply, redirect(socket, to: Routes.game_path(socket, :show, game_id))}
+        {:noreply, redirect(socket, to: Routes.live_path(socket, AppLive.Game, game_id))}
 
       {:error, {:already_started, _}} ->
         # In the very unlikely event that the id is taken, log it and try again

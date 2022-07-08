@@ -37,11 +37,6 @@ defmodule WeDleWeb.Components.Menus do
                       >
                         we-dle
                       </h2>
-                      <%= if @current_user do %>
-                        <span class={"block text-sm font-light font-sans #{text_color()}"}>
-                          <%= @current_user.email %>
-                        </span>
-                      <% end %>
                     </div>
                     <div class="ml-3 flex h-7 items-center">
                       <Components.Buttons.menu_button

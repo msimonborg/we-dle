@@ -1,9 +1,11 @@
-defmodule WeDleWeb.GameLive.Show do
+defmodule WeDleWeb.AppLive.Game do
   @moduledoc """
   The live view that renders and controls the game.
   """
 
   use WeDleWeb, :live_view
+
+  alias WeDleWeb.AppLive
 
   @impl true
   def render(assigns) do
@@ -30,14 +32,11 @@ defmodule WeDleWeb.GameLive.Show do
   def mount(_params, session, socket) do
     game_id = Map.fetch!(session, "game_id")
     settings = Map.fetch!(session, "settings")
-    current_user = Map.fetch!(session, "current_user")
-
     connected = connected?(socket)
 
     {:ok,
      socket
      |> assign(:game_id, game_id)
-     |> assign(:current_user, current_user)
      |> assign(Map.from_struct(settings))
      |> assign(:env, WeDle.config([:env]))
      |> join_game_if_connected(connected)}
@@ -64,6 +63,6 @@ defmodule WeDleWeb.GameLive.Show do
   def handle_event("expire", _, socket) do
     %{game_id: game_id} = socket.assigns
     :ok = WeDle.Game.force_expire(game_id)
-    {:noreply, redirect(socket, to: Routes.game_path(socket, :show, game_id))}
+    {:noreply, redirect(socket, to: Routes.live_path(socket, AppLive.Game, game_id))}
   end
 end

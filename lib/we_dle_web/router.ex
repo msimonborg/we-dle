@@ -2,7 +2,7 @@ defmodule WeDleWeb.Router do
   use WeDleWeb, :router
 
   import Phoenix.LiveDashboard.Router
-  import WeDleWeb.SettingsController
+  import WeDleWeb.{GameController, SettingsController}
 
   defp basic_auth(conn, _) do
     credentials = WeDle.config([:basic_auth])
@@ -56,12 +56,15 @@ defmodule WeDleWeb.Router do
 
   scope "/", WeDleWeb do
     pipe_through :browser
-
     get "/iframe", IframeController, :index
     put "/settings", SettingsController, :update
+  end
 
-    get "/", GameController, :index
+  scope "/", WeDleWeb do
+    pipe_through [:browser, :redirect_to_existing_game]
+
+    live "/", AppLive.Lobby
     # This route must go last or /:game_id always matches any single-nested path
-    get "/:game_id", GameController, :show
+    live "/:game_id", AppLive.Game
   end
 end

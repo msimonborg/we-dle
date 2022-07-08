@@ -1,7 +1,7 @@
 defmodule WeDleWeb.GameControllerTest do
   use WeDleWeb.ConnCase
   alias WeDle.Game
-  alias WeDleWeb.AppLive
+  alias WeDleWeb.{GameLive, LobbyLive}
 
   setup %{conn: conn} do
     {:ok, conn: Phoenix.ConnTest.init_test_session(conn, %{})}
@@ -20,7 +20,7 @@ defmodule WeDleWeb.GameControllerTest do
       assert conn
              |> put_session(:game_id, id)
              |> get("/")
-             |> redirected_to() == Routes.live_path(conn, AppLive.Game, id)
+             |> redirected_to() == Routes.live_path(conn, GameLive, id)
     end
   end
 
@@ -29,7 +29,7 @@ defmodule WeDleWeb.GameControllerTest do
       id = Game.unique_id()
       {:ok, _} = Game.start_or_join(id, "p1")
 
-      conn = get(conn, Routes.live_path(conn, AppLive.Game, id))
+      conn = get(conn, Routes.live_path(conn, GameLive, id))
 
       assert html_response(conn, 200) =~ "we-dle"
       assert get_session(conn, :game_id) == id
@@ -41,9 +41,9 @@ defmodule WeDleWeb.GameControllerTest do
       conn =
         conn
         |> put_session(:game_id, id)
-        |> get(Routes.live_path(conn, AppLive.Game, id))
+        |> get(Routes.live_path(conn, GameLive, id))
 
-      assert redirected_to(conn) == Routes.live_path(conn, AppLive.Lobby)
+      assert redirected_to(conn) == Routes.live_path(conn, LobbyLive)
       assert get_session(conn, :game_id) |> is_nil()
     end
   end

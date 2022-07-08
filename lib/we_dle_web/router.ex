@@ -63,8 +63,8 @@ defmodule WeDleWeb.Router do
   scope "/", WeDleWeb do
     pipe_through [:browser, :redirect_to_existing_game]
 
-    live "/", AppLive.Lobby
+    live "/", LobbyLive
     # This route must go last or /:game_id always matches any single-nested path
-    live "/:game_id", AppLive.Game
+    live "/:game_id", GameLive
   end
 end

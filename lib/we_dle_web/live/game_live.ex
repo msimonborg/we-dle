@@ -1,11 +1,9 @@
-defmodule WeDleWeb.AppLive.Game do
+defmodule WeDleWeb.GameLive do
   @moduledoc """
   The live view that renders and controls the game.
   """
 
   use WeDleWeb, :live_view
-
-  alias WeDleWeb.AppLive
 
   @impl true
   def render(assigns) do
@@ -66,6 +64,6 @@ defmodule WeDleWeb.AppLive.Game do
   def handle_event("expire", _, socket) do
     %{game_id: game_id} = socket.assigns
     :ok = WeDle.Game.force_expire(game_id)
-    {:noreply, redirect(socket, to: Routes.live_path(socket, AppLive.Game, game_id))}
+    {:noreply, redirect(socket, to: Routes.live_path(socket, __MODULE__, game_id))}
   end
 end

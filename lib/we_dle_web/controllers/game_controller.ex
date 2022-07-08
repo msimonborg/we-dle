@@ -7,7 +7,7 @@ defmodule WeDleWeb.GameController do
   use WeDleWeb, :controller
 
   alias WeDle.Game
-  alias WeDleWeb.AppLive
+  alias WeDleWeb.{GameLive, LobbyLive}
 
   def redirect_to_existing_game(conn, _) do
     current_path = current_path(conn)
@@ -19,7 +19,7 @@ defmodule WeDleWeb.GameController do
 
     if game_id do
       conn
-      |> redirect(to: Routes.live_path(conn, AppLive.Game, game_id))
+      |> redirect(to: Routes.live_path(conn, GameLive, game_id))
       |> halt()
     else
       conn
@@ -32,7 +32,7 @@ defmodule WeDleWeb.GameController do
     else
       conn
       |> delete_session(:game_id)
-      |> redirect(to: Routes.live_path(conn, AppLive.Lobby))
+      |> redirect(to: Routes.live_path(conn, LobbyLive))
       |> halt()
     end
   end

@@ -1,4 +1,4 @@
-defmodule WeDleWeb.AppLive.Lobby do
+defmodule WeDleWeb.LobbyLive do
   @moduledoc """
   The live view that renders the welcome and game creation page.
   """
@@ -8,7 +8,7 @@ defmodule WeDleWeb.AppLive.Lobby do
   require Logger
 
   alias WeDle.Game
-  alias WeDleWeb.AppLive
+  alias WeDleWeb.GameLive
 
   @impl true
   def render(assigns) do
@@ -54,7 +54,7 @@ defmodule WeDleWeb.AppLive.Lobby do
 
     case Game.start(game_id) do
       {:ok, _} ->
-        {:noreply, redirect(socket, to: Routes.live_path(socket, AppLive.Game, game_id))}
+        {:noreply, redirect(socket, to: Routes.live_path(socket, GameLive, game_id))}
 
       {:error, {:already_started, _}} ->
         # In the very unlikely event that the id is taken, log it and try again

@@ -19,7 +19,7 @@ defmodule WeDleWeb.Components.Flash do
       class="z-50 fixed inset-0 flex px-4 py-6 pointer-events-none sm:p-6 items-start"
       id="flash-message"
       x-data="{ message: false }"
-      x-init="setTimeout(function() {message = ! message}, 1); setTimeout(function() {message = ! message}, 5000)"
+      x-init="setTimeout(function() {message = ! message}, 1)"
     >
       <div x-cloak class="w-full flex flex-col items-center space-y-4 sm:items-end">
         <div

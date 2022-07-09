@@ -9,31 +9,29 @@ defmodule WeDleWeb.GameController do
   alias WeDle.Game
   alias WeDleWeb.{GameLive, LobbyLive}
 
-  def redirect_to_existing_game(conn, _) do
-    current_path = current_path(conn)
-    check_for_game_and_maybe_redirect(conn, current_path)
-  end
+  plug :remove_app_layout
 
-  defp check_for_game_and_maybe_redirect(conn, "/") do
+  def lobby(conn, _params) do
     game_id = get_session(conn, :game_id)
 
     if game_id do
-      conn
-      |> redirect(to: Routes.live_path(conn, GameLive, game_id))
-      |> halt()
+      redirect(conn, to: Routes.game_path(conn, :game, game_id))
     else
-      conn
+      live_render(conn, LobbyLive)
     end
   end
 
-  defp check_for_game_and_maybe_redirect(conn, "/" <> game_id) do
+  def game(conn, %{"game_id" => game_id}) do
     if Game.exists?(game_id) do
-      put_session(conn, :game_id, game_id)
+      conn
+      |> put_session(:game_id, game_id)
+      |> live_render(GameLive)
     else
       conn
       |> delete_session(:game_id)
-      |> redirect(to: Routes.live_path(conn, LobbyLive))
-      |> halt()
+      |> redirect(to: Routes.game_path(conn, :lobby))
     end
   end
+
+  defp remove_app_layout(conn, _), do: put_layout(conn, false)
 end

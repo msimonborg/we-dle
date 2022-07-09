@@ -1,9 +1,9 @@
-defmodule WeDleWeb.GameLive.IndexTest do
+defmodule WeDleWeb.LobbyLiveTest do
   use WeDleWeb.ConnCase
   import Phoenix.LiveViewTest
   alias WeDle.Game
 
-  describe "Index" do
+  describe "LobbyLive" do
     test "renders the index page", %{conn: conn} do
       {:ok, _, html} = live(conn, "/")
       assert html =~ "start"
@@ -22,11 +22,11 @@ defmodule WeDleWeb.GameLive.IndexTest do
 
     test "clicking the dark mode toggle switch changes themes", %{conn: conn} do
       {:ok, view, html} = live(conn, "/")
-      assert html =~ ~s{<div id="app-shell" class="light"}
+      assert html =~ ~s{<main class="light"}
 
       assert view
              |> element(~s{[phx-click="change_dark_theme"]})
-             |> render_click() =~ ~s{<div id="app-shell" class="dark"}
+             |> render_click() =~ ~s{<main class="dark"}
     end
   end
 end

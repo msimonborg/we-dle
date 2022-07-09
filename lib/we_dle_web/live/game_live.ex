@@ -68,7 +68,7 @@ defmodule WeDleWeb.GameLive do
   def handle_event("expire", _, socket) do
     %{game_id: game_id} = socket.assigns
     :ok = WeDle.Game.force_expire(game_id)
-    {:noreply, redirect(socket, to: Routes.live_path(socket, __MODULE__, game_id))}
+    {:noreply, redirect(socket, to: Routes.game_path(socket, :game, game_id))}
   end
 
   def handle_event("key", %{"value" => "←"}, socket) do

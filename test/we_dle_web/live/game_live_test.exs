@@ -1,9 +1,9 @@
-defmodule WeDleWeb.GameLive.ShowTest do
+defmodule WeDleWeb.GameLiveTest do
   use WeDleWeb.ConnCase
   import Phoenix.LiveViewTest
   alias WeDle.Game
 
-  describe "Show" do
+  describe "GameLive" do
     test "redirects to the index page when the game_id doesn't exist", %{conn: conn} do
       assert {:error, {:redirect, %{to: "/"}}} = live(conn, "/game_id")
     end
@@ -36,11 +36,11 @@ defmodule WeDleWeb.GameLive.ShowTest do
       Game.start(id)
       {:ok, view, html} = live(conn, "/" <> id)
 
-      assert html =~ ~s{<div id="app-shell" class="light"}
+      assert html =~ ~s{<main class="light"}
 
       assert view
              |> element(~s{[phx-click="change_dark_theme"]})
-             |> render_click() =~ ~s{<div id="app-shell" class="dark"}
+             |> render_click() =~ ~s{<main class="dark"}
     end
   end
 end

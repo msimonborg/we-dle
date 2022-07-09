@@ -8,7 +8,6 @@ defmodule WeDleWeb.LobbyLive do
   require Logger
 
   alias WeDle.Game
-  alias WeDleWeb.GameLive
 
   @impl true
   def render(assigns) do
@@ -56,7 +55,7 @@ defmodule WeDleWeb.LobbyLive do
 
     case Game.start(game_id) do
       {:ok, _} ->
-        {:noreply, redirect(socket, to: Routes.live_path(socket, GameLive, game_id))}
+        {:noreply, redirect(socket, to: Routes.game_path(socket, :game, game_id))}
 
       {:error, {:already_started, _}} ->
         # In the very unlikely event that the id is taken, log it and try again

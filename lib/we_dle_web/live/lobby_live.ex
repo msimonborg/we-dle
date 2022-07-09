@@ -13,9 +13,7 @@ defmodule WeDleWeb.LobbyLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <%= unless @env == :prod do %>
-      <.start_button />
-    <% end %>
+    <.start_button />
     """
   end
 
@@ -23,7 +21,11 @@ defmodule WeDleWeb.LobbyLive do
     ~H"""
     <button
       type="button"
-      class="inline-flex items-center px-2.5 py-1.5 shadow-sm text-xs font-medium rounded text-zinc-100 bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-700"
+      class={
+        "inline-flex justify-center items-center px-2.5 py-1.5 shadow-sm " <>
+          "text-xs font-medium rounded text-zinc-100 bg-indigo-600 hover:bg-indigo-700 " <>
+          "focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-700"
+      }
       phx-click="start"
     >
       start

@@ -34,8 +34,8 @@ defmodule WeDleWeb.Components.App do
       class={[(@dark_theme == 1 and "dark") || "light"]}
       x-data="{ mainMenuOpen: false, settingsOpen: false }"
     >
-      <div class={"flex h-screen relative #{background_color()}"}>
-        <nav class={"absolute inset-x-0 top-0 border-b #{border_color()}"}>
+      <div class={"h-screen #{background_color()}"}>
+        <nav class={"border-b #{border_color()}"}>
           <div class="max-w-full mx-auto px-4">
             <div class="flex justify-between h-16">
               <div class="flex items-center">
@@ -98,7 +98,7 @@ defmodule WeDleWeb.Components.App do
           </div>
         </nav>
 
-        <main class="m-auto sm:px-6 lg:px-8">
+        <main class="h-[calc(100%_-_65px)] w-full max-w-[356px] m-auto flex flex-col">
           <%= render_slot(@inner_block) %>
         </main>
       </div>

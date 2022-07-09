@@ -8,9 +8,7 @@ defmodule WeDleWeb.GameLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <%= unless @env == :prod do %>
-      <.expire_button />
-    <% end %>
+    <.expire_button />
     <%= if connected?(@socket) do %>
       <Components.Game.board board={@player.board} />
     <% end %>
@@ -21,7 +19,11 @@ defmodule WeDleWeb.GameLive do
     ~H"""
     <button
       type="button"
-      class="inline-flex items-center px-2.5 py-1.5 shadow-sm text-xs font-medium rounded text-zinc-100 bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-700"
+      class={
+        "inline-flex justify-center items-center px-2.5 py-1.5 shadow-sm " <>
+          "text-xs font-medium rounded text-zinc-100 bg-red-600 hover:bg-red-700 " <>
+          "focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-700"
+      }
       phx-click="expire"
     >
       expire

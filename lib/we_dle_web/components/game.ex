@@ -9,13 +9,11 @@ defmodule WeDleWeb.Components.Game do
 
   def board(assigns) do
     ~H"""
-    <div class="h-full flex grid place-content-center" id="board">
-      <div class="initial h-[428px] w-[356px]">
-        <div class="h-full grid grid-rows-6 gap-1">
-          <%= for row <- @board.rows do %>
-            <.row letters={row} word_length={@board.word_length} />
-          <% end %>
-        </div>
+    <div class="flex grow justify-center items-center overflow-hidden" id="board">
+      <div class="grid grid-rows-6 gap-[5px] p-[10px] h-[420px] w-[350px] box-border">
+        <%= for row <- @board.rows do %>
+          <.row letters={row} word_length={@board.word_length} />
+        <% end %>
       </div>
     </div>
     """
@@ -30,7 +28,7 @@ defmodule WeDleWeb.Components.Game do
       end
 
     ~H"""
-    <div class="grid grid-cols-5 gap-1">
+    <div class="grid grid-cols-5 gap-[5px]">
       <%= for {distance, letter} <- @letters do %>
         <.tile distance={distance} letter={letter} />
       <% end %>
@@ -40,10 +38,12 @@ defmodule WeDleWeb.Components.Game do
 
   def tile(assigns) do
     ~H"""
-    <div class={"h-auto w-auto border-2 border-solid #{border_color()}"}>
-      <div class={"h-full grid place-items-center text-4xl #{text_color()}"}>
-        <%= @letter %>
-      </div>
+    <div class={
+      "w-full inline-flex justify-center items-center text-[2rem] leading-8 " <>
+        "font-bold align-middle box-border uppercase border-2 border-solid " <>
+        "#{border_color()} #{text_color()}"
+    }>
+      <%= @letter %>
     </div>
     """
   end

@@ -9,6 +9,11 @@ module.exports = {
     '../lib/*_web.ex',
     '../lib/*_web/**/*.*ex'
   ],
+  safelist: [
+    'bg-green-500',
+    'bg-yellow-500',
+    'bg-zinc-500'
+  ],
   theme: {
     extend: {
       fontFamily: {

@@ -5,6 +5,8 @@ defmodule WeDleWeb.GameLive do
 
   use WeDleWeb, :live_view
 
+  alias WeDle.Game
+
   @impl true
   def render(assigns) do
     ~H"""
@@ -67,5 +69,56 @@ defmodule WeDleWeb.GameLive do
     %{game_id: game_id} = socket.assigns
     :ok = WeDle.Game.force_expire(game_id)
     {:noreply, redirect(socket, to: Routes.live_path(socket, __MODULE__, game_id))}
+  end
+
+  def handle_event("key", %{"value" => "←"}, socket) do
+    socket = clear_flash(socket)
+    {:noreply, remove_last_value_from_board(socket)}
+  end
+
+  def handle_event("key", %{"value" => "↵"}, %{assigns: assigns} = socket) do
+    socket = clear_flash(socket)
+
+    %{game_id: game_id, player: %{board: board} = player} = assigns
+    row = Enum.at(board.rows, board.turns)
+
+    socket =
+      if length(row) < board.word_length do
+        put_flash(socket, :error, "not enough letters")
+      else
+        word = Enum.map_join(row, fn {_, char} -> char end)
+
+        case Game.submit_word(game_id, player.id, word) do
+          {:ok, player} -> assign(socket, :player, player)
+          {:error, reason} -> put_flash(socket, :error, reason)
+        end
+      end
+
+    {:noreply, socket}
+  end
+
+  def handle_event("key", %{"value" => value}, socket) do
+    socket = clear_flash(socket)
+    {:noreply, insert_value_in_board(socket, value)}
+  end
+
+  defp remove_last_value_from_board(%{assigns: assigns} = socket) do
+    %{player: %{board: board} = player} = assigns
+    row = board.rows |> Enum.at(board.turns) |> List.delete_at(-1)
+    deep_update_row_in_assigns(socket, player, board, row)
+  end
+
+  defp insert_value_in_board(%{assigns: assigns} = socket, value) do
+    %{player: %{board: board} = player} = assigns
+    row = Enum.at(board.rows, board.turns)
+    row = if length(row) == board.word_length, do: row, else: row ++ [{3, value}]
+    deep_update_row_in_assigns(socket, player, board, row)
+  end
+
+  defp deep_update_row_in_assigns(socket, player, board, row) do
+    rows = List.replace_at(board.rows, board.turns, row)
+    board = %{board | rows: rows}
+    player = %{player | board: board}
+    assign(socket, :player, player)
   end
 end

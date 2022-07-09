@@ -29,11 +29,7 @@ defmodule WeDleWeb.Components.App do
 
   def shell(assigns) do
     ~H"""
-    <div
-      id="app-shell"
-      class={[(@dark_theme == 1 and "dark") || "light"]}
-      x-data="{ mainMenuOpen: false, settingsOpen: false }"
-    >
+    <div id="app-shell" x-data="{ mainMenuOpen: false, settingsOpen: false }">
       <div class={"h-screen #{background_color()}"}>
         <nav class={"border-b #{border_color()}"}>
           <div class="max-w-full mx-auto px-4">
@@ -98,9 +94,9 @@ defmodule WeDleWeb.Components.App do
           </div>
         </nav>
 
-        <main class="h-[calc(100%_-_65px)] w-full max-w-[500px] m-auto flex flex-col">
+        <div class="h-[calc(100%_-_65px)] w-full max-w-[500px] m-auto flex flex-col">
           <%= render_slot(@inner_block) %>
-        </main>
+        </div>
       </div>
     </div>
     """

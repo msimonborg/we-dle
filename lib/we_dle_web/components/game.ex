@@ -20,12 +20,14 @@ defmodule WeDleWeb.Components.Game do
     """
   end
 
-  def game_board_row(assigns) do
+  def game_board_row(%{letters: letters, word_length: word_length} = assigns) do
+    difference = word_length - length(letters)
+
     assigns =
-      if length(assigns.letters) == assigns.word_length do
+      if difference == 0 do
         assigns
       else
-        assign(assigns, :letters, Enum.map(1..assigns.word_length, fn _ -> {3, ""} end))
+        assign(assigns, :letters, letters ++ Enum.map(1..difference, fn _ -> {3, ""} end))
       end
 
     ~H"""
@@ -37,12 +39,22 @@ defmodule WeDleWeb.Components.Game do
     """
   end
 
-  def game_board_tile(assigns) do
+  def game_board_tile(%{distance: distance} = assigns) do
+    background_color =
+      case distance do
+        0 -> "green-500"
+        1 -> "yellow-500"
+        2 -> "zinc-500"
+        3 -> background_color()
+      end
+
+    assigns = assign(assigns, :background_color, background_color)
+
     ~H"""
     <div class={
       "w-full inline-flex justify-center items-center text-[2rem] leading-8 " <>
         "font-bold align-middle box-border uppercase border-2 border-solid " <>
-        "#{border_color()} #{text_color()}"
+        "#{border_color()} #{text_color()} bg-#{@background_color}"
     }>
       <%= @letter %>
     </div>
@@ -61,12 +73,12 @@ defmodule WeDleWeb.Components.Game do
 
       <.keyboard_row keys={~w(z x c v b n m)}>
         <:left_extra>
-          <.key data_key="↵" class="grow-[1.5] text-xs">
+          <.key value="↵" class="grow-[1.5] text-xs">
             enter
           </.key>
         </:left_extra>
         <:right_extra>
-          <.key data_key="←" class="grow-[1.5] text-xs">
+          <.key value="←" class="grow-[1.5] text-xs">
             <Components.Icons.outline_backspace />
           </.key>
         </:right_extra>
@@ -83,7 +95,7 @@ defmodule WeDleWeb.Components.Game do
       <% end %>
 
       <%= for key <- @keys do %>
-        <.key data_key={key}><%= key %></.key>
+        <.key value={key}><%= key %></.key>
       <% end %>
 
       <%= if assigns[:right_extra] do %>
@@ -99,7 +111,8 @@ defmodule WeDleWeb.Components.Game do
     ~H"""
     <button
       type="button"
-      data-key={@data_key}
+      value={@value}
+      phx-click="key"
       class={
         [
           "font-bold border-0 p-0 h-[58px] rounded cursor-pointer ",

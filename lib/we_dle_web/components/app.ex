@@ -98,7 +98,7 @@ defmodule WeDleWeb.Components.App do
           </div>
         </nav>
 
-        <main class="h-[calc(100%_-_65px)] w-full max-w-[356px] m-auto flex flex-col">
+        <main class="h-[calc(100%_-_65px)] w-full max-w-[500px] m-auto flex flex-col">
           <%= render_slot(@inner_block) %>
         </main>
       </div>

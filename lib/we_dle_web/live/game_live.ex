@@ -10,7 +10,7 @@ defmodule WeDleWeb.GameLive do
     ~H"""
     <.expire_button />
     <%= if connected?(@socket) do %>
-      <Components.Game.board board={@player.board} />
+      <Components.Game.game_board board={@player.board} />
     <% end %>
     """
   end

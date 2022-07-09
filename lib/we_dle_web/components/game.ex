@@ -10,7 +10,7 @@ defmodule WeDleWeb.Components.Game do
   def game_board(assigns) do
     ~H"""
     <div class="flex grow justify-center items-center overflow-hidden" id="board">
-      <div class="grid grid-rows-6 gap-[5px] p-[10px] h-[420px] w-[350px] box-border">
+      <div class="grid grid-rows-6 gap-[5px] p-[10px] h-full max-h-[420px] max-w-[350px] aspect-[35/42] box-border">
         <%= for row <- @board.rows do %>
           <.game_board_row letters={row} word_length={@board.word_length} />
         <% end %>

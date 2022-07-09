@@ -1,10 +1,11 @@
 <!DOCTYPE html>
-<html class="h-full" lang="en">
+<html lang="en">
 
   <head>
     <meta charset="utf-8"/>
     <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>
+    <meta name="apple-mobile-web-app-capable" content="yes" />
     <%= csrf_meta_tag() %>
     <%= live_title_tag assigns[:page_title] || "we-dle" %>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -14,7 +15,7 @@
     <script defer phx-track-static type="text/javascript" src={Routes.static_path(@conn, "/assets/app.js")}></script>
   </head>
 
-  <body class="h-full">
+  <body>
     <%= @inner_content %>
   </body>
 

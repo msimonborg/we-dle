@@ -30,7 +30,7 @@ defmodule WeDleWeb.Components.App do
   def shell(assigns) do
     ~H"""
     <div id="app-shell" x-data="{ mainMenuOpen: false, settingsOpen: false }">
-      <div class={"h-screen #{background_color()}"}>
+      <div class={"h-screen h-[calc(var(--vh,_1vh)_*_100)] #{background_color()}"}>
         <nav class={"border-b #{border_color()}"}>
           <div class="max-w-full mx-auto px-4">
             <div class="flex justify-between h-16">

@@ -1,11 +1,13 @@
-<p class="alert alert-info" role="alert"
-  phx-click="lv:clear-flash"
-  phx-value-key="info"><%= live_flash(@flash, :info) %></p>
+<main class={[(@dark_theme == 1 and "dark") || "light"]}>
+  <%= if live_flash(@flash, :info) do %>
+    <Components.Flash.message level="info" message={live_flash(@flash, :info)} />
+  <% end %>
 
-<p class="alert alert-danger" role="alert"
-  phx-click="lv:clear-flash"
-  phx-value-key="error"><%= live_flash(@flash, :error) %></p>
+  <%= if live_flash(@flash, :error) do %>
+    <Components.Flash.message level="error" message={live_flash(@flash, :error)} />
+  <% end %>
 
-<Components.App.shell {assigns}>
-  <%= @inner_content %>
-</Components.App.shell>
+  <Components.App.shell {assigns}>
+    <%= @inner_content %>
+  </Components.App.shell>
+</main>

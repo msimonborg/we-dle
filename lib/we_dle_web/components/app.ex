@@ -61,7 +61,7 @@ defmodule WeDleWeb.Components.App do
                   class="flex-shrink-0 flex items-center"
                 >
                   <span class={"font-serif font-bold text-4xl #{text_color()}"}>
-                    we-dle
+                    We-dle
                   </span>
                 </div>
               </div>

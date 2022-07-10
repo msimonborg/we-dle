@@ -37,7 +37,7 @@ defmodule WeDleWeb.Components.Menus do
                         class={"text-2xl font-medium font-serif #{text_color()}"}
                         id="slide-over-title"
                       >
-                        we-dle
+                        We-dle
                       </h2>
                     </div>
                     <div class="ml-3 flex h-7 items-center">

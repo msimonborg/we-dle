@@ -25,7 +25,7 @@ defmodule WeDleWeb.LobbyLive do
       let={f}
       for={:game_select}
       id="game-select"
-      class={"m-auto w-80 font-mono tracking-wider uppercase #{text_color()}"}
+      class={"m-auto w-80 font-mono tracking-wider lowercase #{text_color()}"}
       phx-submit="game_select"
     >
       <.game_select_title />
@@ -39,7 +39,7 @@ defmodule WeDleWeb.LobbyLive do
     ~H"""
     <div class="m-4">
       <h2 class="text-2xl text-center">
-        Welcome to <span class="normal-case tracking-normal font-serif">We-dle</span>!
+        Welcome.
       </h2>
       <p class="text-center">Please select a game mode:</p>
     </div>

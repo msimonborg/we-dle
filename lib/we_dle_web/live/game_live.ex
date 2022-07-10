@@ -36,12 +36,14 @@ defmodule WeDleWeb.GameLive do
   @impl true
   def mount(_params, session, socket) do
     game_id = Map.fetch!(session, "game_id")
+    game_mode = Map.fetch!(session, "game_mode")
     settings = Map.fetch!(session, "settings")
     connected = connected?(socket)
 
     {:ok,
      socket
      |> assign(:game_id, game_id)
+     |> assign(:game_mode, game_mode)
      |> assign(Map.from_struct(settings))
      |> assign(:env, WeDle.config([:env]))
      |> join_game_if_connected(connected)}
@@ -66,9 +68,14 @@ defmodule WeDleWeb.GameLive do
   end
 
   def handle_event("expire", _, socket) do
-    %{game_id: game_id} = socket.assigns
+    %{game_id: game_id, game_mode: game_mode} = socket.assigns
+
     :ok = WeDle.Game.force_expire(game_id)
-    {:noreply, redirect(socket, to: Routes.game_path(socket, :game, game_id))}
+
+    params = %{game_mode: game_mode}
+    path = Routes.game_path(socket, :game, game_id, params)
+
+    {:noreply, redirect(socket, to: path)}
   end
 
   def handle_event("key", %{"value" => "←"}, socket) do

@@ -24,7 +24,12 @@ module.exports = {
         serif: [
           '"Bree Serif"',
           ...defaultTheme.fontFamily.serif,
+        ],
+        mono: [
+          'Inconsolata',
+          ...defaultTheme.fontFamily.mono,
         ]
+
       }
     },
   },

@@ -5,20 +5,20 @@ defmodule WeDleWeb.GameLiveTest do
 
   describe "GameLive" do
     test "redirects to the index page when the game_id doesn't exist", %{conn: conn} do
-      assert {:error, {:redirect, %{to: "/"}}} = live(conn, "/game_id")
+      assert {:error, {:redirect, %{to: "/"}}} = live(conn, "/game_id?game_mode=mode")
     end
 
     test "renders the show page when the game_id exists", %{conn: conn} do
       id = Game.unique_id()
       Game.start(id)
-      {:ok, _, html} = live(conn, "/" <> id)
+      {:ok, _, html} = live(conn, "/" <> id <> "?game_mode=mode")
       assert html =~ "expire"
     end
 
     test "clicking \"expire\" ends the game and redirects to Index", %{conn: conn} do
       id = Game.unique_id()
       Game.start(id)
-      {:ok, view, _} = live(conn, "/" <> id)
+      {:ok, view, _} = live(conn, "/" <> id <> "?game_mode=mode")
 
       assert {:ok, conn} =
                view
@@ -34,7 +34,7 @@ defmodule WeDleWeb.GameLiveTest do
     test "clicking the dark mode toggle switch changes themes", %{conn: conn} do
       id = Game.unique_id()
       Game.start(id)
-      {:ok, view, html} = live(conn, "/" <> id)
+      {:ok, view, html} = live(conn, "/" <> id <> "?game_mode=mode")
 
       assert html =~ ~s{<main class="light"}
 

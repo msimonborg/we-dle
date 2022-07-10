@@ -6,16 +6,18 @@ defmodule WeDleWeb.LobbyLiveTest do
   describe "LobbyLive" do
     test "renders the index page", %{conn: conn} do
       {:ok, _, html} = live(conn, "/")
-      assert html =~ "start"
+      assert html =~ "start game"
     end
 
-    test "clicking \"start\" starts a game and redirects to Show", %{conn: conn} do
+    test "clicking \"start game\" starts a game and redirects to Show", %{conn: conn} do
       {:ok, view, _} = live(conn, "/")
 
-      assert {:error, {:redirect, %{to: "/" <> game_id}}} =
+      assert {:error, {:redirect, %{to: "/" <> game_id_and_mode}}} =
                view
-               |> element("button", "start")
-               |> render_click()
+               |> form("#game-select", %{"game_select" => "Classic"})
+               |> render_submit()
+
+      game_id = String.trim(game_id_and_mode, "?game_mode=Classic")
 
       assert Game.exists?(game_id)
     end

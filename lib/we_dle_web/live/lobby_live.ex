@@ -74,9 +74,10 @@ defmodule WeDleWeb.LobbyLive do
     ~H"""
     <div>
       <label
-        @click={"if (#{@enabled}) { selected = '#{@mode}' }"}
-        :class={"selected == '#{@mode}' && 'ring-2 ring-zinc-500'"}
-        x-init={"if (#{@default}) { selected = '#{@mode}' }"}
+        x-data={"{ checked: () => selected == '#{@mode}' }"}
+        @click={"#{@enabled} && (selected = '#{@mode}')"}
+        :class="checked() && 'ring-2 ring-zinc-500'"
+        x-init={"#{@default} && (selected = '#{@mode}')"}
         class={
           "relative block #{background_color()} #{text_color()} #{hover_text_color()} " <>
             "border-2 #{border_color()} rounded-lg px-6 py-4 cursor-pointer flex " <>
@@ -90,8 +91,8 @@ defmodule WeDleWeb.LobbyLive do
           class="sr-only"
           aria-labelledby={"#{@mode}-label"}
           aria-describedby={"#{@mode}-description"}
-          :aria-selected={"selected == '#{@mode}'"}
-          :checked={"selected == '#{@mode}'"}
+          :aria-selected="checked()"
+          :checked="checked()"
         />
         <span class="flex items-center">
           <span class="text-sm flex flex-col" :class={"#{@enabled} || 'text-zinc-500'"}>

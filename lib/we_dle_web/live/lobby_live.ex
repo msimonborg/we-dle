@@ -78,8 +78,9 @@ defmodule WeDleWeb.LobbyLive do
         :class={"selected == '#{@mode}' && 'ring-2 ring-zinc-500'"}
         x-init={"if (#{@default}) { selected = '#{@mode}' }"}
         class={
-          "relative block #{background_color()} #{text_color()} border-2 #{border_color()} " <>
-            "rounded-lg px-6 py-4 cursor-pointer flex justify-between justify-between h-32"
+          "relative block #{background_color()} #{text_color()} #{hover_text_color()} " <>
+            "border-2 #{border_color()} rounded-lg px-6 py-4 cursor-pointer flex " <>
+            "justify-between justify-between h-32"
         }
       >
         <input
@@ -115,7 +116,7 @@ defmodule WeDleWeb.LobbyLive do
     <%= submit("start game",
       class:
         "mt-4 block uppercase w-full py-2 items-center rounded-lg border-4 " <>
-          "#{border_color()} focus:ring-2 focus:ring-zinc-500"
+          "#{border_color()} #{hover_text_color()} focus:ring-2 focus:ring-zinc-500"
     ) %>
     """
   end
